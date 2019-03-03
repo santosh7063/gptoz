@@ -1,4 +1,5 @@
 drawSvg
+matplotlib
 numpy
-opencv
+opencv-python
 scipy
