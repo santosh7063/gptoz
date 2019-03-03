@@ -3,7 +3,8 @@ from __future__ import division
 import os
 import argparse
 import numpy as np
-from audiopack import loadwav, render_frame, audio_chunks
+from audiopack import loadwav, audio_chunks
+from videopack import render_frame
 from drawSvg import Drawing
 
 
