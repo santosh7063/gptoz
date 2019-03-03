@@ -1,0 +1,4 @@
+drawSvg
+numpy
+opencv
+scipy
