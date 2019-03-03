@@ -61,4 +61,4 @@ if __name__ == '__main__':
                 height=args.height
             )
 
-        drawing.saveSvg(os.path.join(args.outdir, "audiosvg_"+padded+'.svg'))
+        drawing.saveSvg(os.path.join(args.outdir, "audiolines_"+padded+'.svg'))

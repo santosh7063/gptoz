@@ -10,7 +10,7 @@ Installation
 Dependencies
 ------------
 
-Audiovizz is best run with python3. In fact, i doubt it does run on python2.7
+Vizzy is best run with python3. In fact, i doubt it does run on python2.7
 without modifications.
 
 - [opencv](https://opencv.org/) (with python bindings installed)
