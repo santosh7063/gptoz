@@ -2,6 +2,7 @@
 from __future__ import print_function, division
 import math
 import random
+from drawSvg import Drawing, Path
 
 
 class Point(object):
@@ -101,7 +102,7 @@ class Flash(object):
     def __init__(self, width=500, height=500, start=None, end=None):
         self.width = width
         self.height = height
-        self.start = start or Point(0, 0)
+        self.start = start or Point(width // 2, 0)
         self.end = end or Point(width // 2, height)
         self.add_point(self.start)
         self._pointer = 0
@@ -112,18 +113,19 @@ class Flash(object):
     def current_node(self):
         return self._nodes[self._pointer]
 
-    def random_point(self):
+    def random_point(self, x, y):
+        current = self.current_node()
         return Point(
-            random.randint(0, self.width),
-            random.randint(0, self.height)
+            current.x + random.randint(1, x) - x // 2,
+            current.y + random.randint(1, y) - y // 2
         )
 
-    def random_walk(self):
+    def random_walk(self, length=random.randint(1, 10)):
         def next_node():
             try:
                 a, b = self._nodes[-2:]
             except ValueError:
-                return self.random_point()
+                return self.random_point(10, 10)
 
             last_angle = Vector(a, b).phi
             factor = random.randint(-1, 1)
@@ -131,9 +133,8 @@ class Flash(object):
             if factor == 0:
                 new_angle = last_angle + (rand - 0.5) * math.pi / 2
             else:
-                new_angle = last_angle - factor * (rand - 0.5) * math.pi / 2
+                new_angle = last_angle - factor * rand * math.pi / 2
 
-            length = 3
             nv = Vector.from_polar(self.current_node(), new_angle, length)
             return b.translate(*nv.ab)
 
@@ -145,10 +146,27 @@ class Flash(object):
         self._nodes.append(point)
         self._pointer += 1
 
+    def render(self):
+        drawing = Drawing(self.width, self.height, origin=(0, 0))
+        path = Path(
+            stroke_width=1,
+            stroke='black',
+            fill='black',
+            fill_opacity=0.0
+        )
+        path.M(self.start.x, self.start.y)
+        for node in self._nodes:
+            path.L(node.x, node.y)
+
+        path.L(self.end.x, self.end.y)
+        drawing.append(path)
+        drawing.saveSvg('/tmp/flash.svg')
+
 
 if __name__ == '__main__':
 
-    nodes = 23
-    flash = Flash(Point(0, 0))
+    nodes = 99
+    flash = Flash()
     for n in range(nodes):
-        flash.add_point()
+        flash.random_walk()
+    flash.render()
