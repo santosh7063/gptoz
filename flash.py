@@ -97,15 +97,14 @@ class Vector(object):
 class Flash(object):
 
     _nodes = []
-    _pointer = -1
+    _pointer = 0
 
     def __init__(self, width=500, height=500, start=None, end=None):
         self.width = width
         self.height = height
-        self.start = start or Point(width // 2, 0)
-        self.end = end or Point(width // 2, height)
-        self.add_point(self.start)
-        self._pointer = 0
+        self.start = start or Point(width // 2, height)
+        self.end = end or Point(width // 2, 0)
+        self._nodes.append(self.start)
 
     def __str__(self):
         return ' → '.join(map(str, self._nodes))
@@ -121,7 +120,7 @@ class Flash(object):
         )
 
     def random_walk(self, length=random.randint(1, 10)):
-        def next_node():
+        def next_node(length):
             try:
                 a, b = self._nodes[-2:]
             except ValueError:
@@ -131,14 +130,21 @@ class Flash(object):
             factor = random.randint(-1, 1)
             rand = random.random()
             if factor == 0:
-                new_angle = last_angle + (rand - 0.5) * math.pi / 2
+                # new_angle = last_angle + (rand - 0.5) * math.pi / 2
+                end_vector = Vector(self.current_node(), self.end)
+                heading_vector = Vector(
+                    self.current_node(),
+                    Point(*end_vector.heading)
+                )
+                new_angle = heading_vector.phi
+                length = length ** 2
             else:
                 new_angle = last_angle - factor * rand * math.pi / 2
 
             nv = Vector.from_polar(self.current_node(), new_angle, length)
             return b.translate(*nv.ab)
 
-        self.add_point(next_node())
+        self.add_point(next_node(length))
 
     def add_point(self, point=None):
         if point is None:
@@ -155,7 +161,7 @@ class Flash(object):
             fill_opacity=0.0
         )
         path.M(self.start.x, self.start.y)
-        for node in self._nodes:
+        for node in self._nodes[1:]:
             path.L(node.x, node.y)
 
         path.L(self.end.x, self.end.y)
