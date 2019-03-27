@@ -35,6 +35,13 @@ class Point(object):
             self.y + y
         )
 
+    def within_limits(self, x, y):
+        return (
+            self.x >= 0 and self.x <= x
+            and
+            self.y >= 0 and self.y<= y
+        )
+
 
 class Vector(object):
 
@@ -97,7 +104,6 @@ class Vector(object):
 class Flash(object):
 
     _nodes = []
-    _pointer = 0
 
     def __init__(self, width=500, height=500, start=None, end=None):
         self.width = width
@@ -109,48 +115,44 @@ class Flash(object):
     def __str__(self):
         return ' → '.join(map(str, self._nodes))
 
-    def current_node(self):
-        return self._nodes[self._pointer]
+    def current_point(self):
+        return self._nodes[-1:][0]
 
-    def random_point(self, x, y):
-        current = self.current_node()
+    def random_point(self, x=10, y=10):
+        current = self.current_point()
         return Point(
             current.x + random.randint(1, x) - x // 2,
             current.y + random.randint(1, y) - y // 2
         )
 
-    def random_walk(self, length=random.randint(1, 10)):
+    def random_walk(self, length=random.randint(1, 10), bias=0):
         def next_node(length):
             try:
                 a, b = self._nodes[-2:]
             except ValueError:
                 return self.random_point(10, 10)
 
-            last_angle = Vector(a, b).phi
-            factor = random.randint(-1, 1)
             rand = random.random()
+            factor = random.randint(-1, 1)
             if factor == 0:
-                # new_angle = last_angle + (rand - 0.5) * math.pi / 2
-                end_vector = Vector(self.current_node(), self.end)
-                heading_vector = Vector(
-                    self.current_node(),
-                    Point(*end_vector.heading)
-                )
-                new_angle = heading_vector.phi
+                # why is it off?
+                new_angle = math.pi / 2 - Vector(b, self.end).phi + (rand - 0.5)
                 length = length ** 2
             else:
-                new_angle = last_angle - factor * rand * math.pi / 2
+                new_angle = math.pi / 2 - factor * rand * math.pi / 2
 
-            nv = Vector.from_polar(self.current_node(), new_angle, length)
+            nv = Vector.from_polar(b, new_angle, length)
             return b.translate(*nv.ab)
 
-        self.add_point(next_node(length))
+        node = next_node(length)
+        while not node.within_limits(self. width, self.height):
+            node = next_node(length)
+        self.add_point(node)
 
     def add_point(self, point=None):
         if point is None:
             point = self.random_point()
         self._nodes.append(point)
-        self._pointer += 1
 
     def render(self):
         drawing = Drawing(self.width, self.height, origin=(0, 0))
