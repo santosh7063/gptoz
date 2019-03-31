@@ -154,21 +154,29 @@ class Flash(object):
             point = self.random_point()
         self._nodes.append(point)
 
+    @property
+    def flashes(self):
+        return [self] + [n for n in self._nodes if isinstance(n, Flash)]
+
     def render(self):
         drawing = Drawing(self.width, self.height, origin=(0, 0))
-        path = Path(
-            stroke_width=1,
-            stroke='black',
-            fill='black',
-            fill_opacity=0.0
-        )
-        path.M(self.start.x, self.start.y)
-        for node in self._nodes[1:]:
-            path.L(node.x, node.y)
+        for flash in self.flashes:
+            path = Path(
+                stroke_width=1,
+                stroke='black',
+                fill='black',
+                fill_opacity=0.0
+            )
+            path.M(flash.start.x, flash.start.y)
+            for node in flash._nodes[1:]:
+                if isinstance(node, Flash):
+                    pass
+                elif isinstance(node, Point):
+                    path.L(node.x, node.y)
 
-        path.L(self.end.x, self.end.y)
-        drawing.append(path)
-        drawing.saveSvg('/tmp/flash.svg')
+            path.L(flash.end.x, flash.end.y)
+            drawing.append(path)
+        return drawing
 
 
 if __name__ == '__main__':
@@ -177,4 +185,6 @@ if __name__ == '__main__':
     flash = Flash()
     for n in range(nodes):
         flash.random_walk()
-    flash.render()
+
+    drawing = flash.render()
+    drawing.saveSvg('/tmp/flash.svg')
