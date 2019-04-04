@@ -1,16 +1,23 @@
 #!/usr/bin/env python3
-import os
+from __future__ import print_function, division
+import os.path
+from sys import stdout
 import argparse
 import numpy as np
+import scipy.fftpack
 from drawSvg import Drawing
 from audiopack import loadwav, audio_chunks
 from videopack import render_frame
+from lib import progress
+
+
+def spectrum(block):
+    s = scipy.fftpack.fft(block)
+    return 2.0/N * np.abs(s[:N//2])
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        description='Draw hectic lines from audiobuffer and spectrum'
-    )
+    parser = argparse.ArgumentParser(description='Draw hectic lines from spectrum')
     parser.add_argument('soundfile', metavar='soundfile', type=str,
         help='soundfile'
     )
@@ -33,35 +40,41 @@ if __name__ == '__main__':
 
     meta, data = loadwav(args.soundfile)
 
+    print("Samplerate: %d" % meta.rate)
+    print("Channels: %d" % meta.channels)
+    print("Length: %d samples, %d seconds" % (meta.samples, meta.seconds))
+
     blocksize  = meta.rate // args.fps
     blocks     = meta.samples // blocksize
 
-    for n, b in enumerate(audio_chunks(data, blocksize)):
-        padded = "{0:05d}".format(n)
-        drawing = Drawing(args.width, args.height, origin=(0, 0))
+    print("%d Frames at %d samples" % (blocks, blocksize))
 
-        if len(b) < blocksize:
-            b = np.lib.pad(b, ((blocksize-len(b)) // 2), 'constant')
+    N = blocksize
+    T = 1.0 / blocksize * 1.25
+    for n, b in enumerate(audio_chunks(data, blocksize)):
+        padded = "{0:03d}".format(n)
+        drawing = Drawing(args.width, args.height, origin=(0, 0))
         if args.multichannel and meta.channels > 1:
             reflect = [(1,1), (-1,1), (1,-1), (-1,-1)]
             for i in range(meta.channels-1):
-                drawing = render_frame(
+                scene = render_frame(
                     drawing,
-                    b.T[i],
-                    plotter='cross',
+                    spectrum(b.T[i]),
+                    plotter='osci',
                     width=args.width,
-                    height=args.height,
-                    reflect=reflect[i % meta.channels]
+                    height=args.height
                 )
         else:
             if meta.channels > 1:
                 b = b.T[0]
-            drawing = render_frame(
+            scene = render_frame(
                 drawing,
-                b,
-                plotter='cross',
+                spectrum(b),
+                plotter='osci',
                 width=args.width,
                 height=args.height
             )
+        drawing.saveSvg(os.path.join(args.outdir, "spectrum_"+padded+'.svg'))
+        progress(n, blocks)
 
-        drawing.saveSvg(os.path.join(args.outdir, "audiocross_"+padded+'.svg'))
+    stdout.write('\n')
