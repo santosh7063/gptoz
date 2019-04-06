@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 from drawSvg import Path
-from math import pi
+from math import pi, e, sin, cos, sqrt
+import random
 from audiopack import spectrum
+from flash import Flash
 
 
  ##     ##     ##      ##     ##     ##     ##     ##     ##
@@ -47,12 +49,33 @@ def cross(drawing, data, width, height, reflect):
     path.M(width * 0.5, height * 0.5)
     spec = spectrum(data, len(data))
     for i, j in zip(data, spec):
-        x  = i * width * 0.5 + width * 0.5
-        y  = (height * j * 0.5 * pi) + height * 0.5
+        x = i * width * 0.5 + width * 0.5
+        y = (height * j * 0.5 * pi) + height * 0.5
         #y  = height * j * pi
         path.L(x, y)
 
     drawing.append(path)
+    return drawing
+
+
+def flash(drawing, data, width, height, reflect):
+    flash = Flash(width=width, height=height)
+    flashes = [flash]
+    nodes = len(data) // 2
+    for i in range(nodes):
+        if flash.current_point().within_perimeter(flash.end, 10):
+            flash = Flash(width=width, height=height)
+            flashes.append(flash)
+        else:
+            flash.random_walk(
+                data[i] * random.randrange(1, 7) ** e,
+                data[nodes-i-1],
+                mix=0.0
+            )
+
+    for flash in flashes:
+        drawing.append(flash.path)
+
     return drawing
 
 

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function, division
+import sys
 import math
 import random
 from drawSvg import Drawing, Path
@@ -39,8 +40,11 @@ class Point(object):
         return (
             self.x >= 0 and self.x <= x
             and
-            self.y >= 0 and self.y<= y
+            self.y >= 0 and self.y <= y
         )
+
+    def within_perimeter(self, other, r):
+        return Vector(self, other).length < r
 
 
 class Vector(object):
@@ -103,20 +107,29 @@ class Vector(object):
 
 class Flash(object):
 
-    _nodes = []
-
     def __init__(self, width=500, height=500, start=None, end=None):
         self.width = width
         self.height = height
         self.start = start or Point(width // 2, height)
         self.end = end or Point(width // 2, 0)
+        self._nodes = []
         self._nodes.append(self.start)
 
     def __str__(self):
         return ' → '.join(map(str, self._nodes))
 
-    def current_point(self):
+    def __repr__(self):
+        return '<Flash {}>'.format(id(self))
+
+    def __len__(self):
+        return len(self._nodes)
+
+    @property
+    def current_node(self):
         return self._nodes[-1:][0]
+
+    def current_point(self):
+        return self.points[-1:][0]
 
     def random_point(self, x=10, y=10):
         current = self.current_point()
@@ -125,21 +138,30 @@ class Flash(object):
             current.y + random.randint(1, y) - y // 2
         )
 
-    def random_walk(self, length=random.randint(1, 10), bias=0):
+    def random_walk(self, length=random.randint(1, 10), data=0.0, mix=0.0):
+        """
+        Create a segment in a zig-zag path towards the end point
+        :param number:
+            length of the segment
+        :param float:
+            range -1..1 fixed influence on the deflector
+        :param float:
+            range 0..1 how to mix fixed with random value
+        """
         def next_node(length):
             try:
-                a, b = self._nodes[-2:]
+                a, b = self.points[-2:]
             except ValueError:
                 return self.random_point(10, 10)
 
-            rand = random.random()
+            deflect = random.random() * (1. - mix) + data * mix
             factor = random.randint(-1, 1)
             if factor == 0:
                 # why is it off?
-                new_angle = math.pi / 2 - Vector(b, self.end).phi + (rand - 0.5)
+                new_angle = math.pi / 2 - Vector(b, self.end).phi + (deflect - 0.5)
                 length = length ** 2
             else:
-                new_angle = math.pi / 2 - factor * rand * math.pi / 2
+                new_angle = math.pi / 2 - factor * deflect * math.pi / 2
 
             nv = Vector.from_polar(b, new_angle, length)
             return b.translate(*nv.ab)
@@ -147,44 +169,62 @@ class Flash(object):
         node = next_node(length)
         while not node.within_limits(self. width, self.height):
             node = next_node(length)
-        self.add_point(node)
+        self.add_node(node)
 
-    def add_point(self, point=None):
-        if point is None:
-            point = self.random_point()
-        self._nodes.append(point)
+    def add_node(self, node=None):
+        if node is None:
+            node = self.random_point()
+        self._nodes.append(node)
 
     @property
     def flashes(self):
-        return [self] + [n for n in self._nodes if isinstance(n, Flash)]
+        return [n for n in self._nodes if isinstance(n, Flash)]
 
-    def render(self):
+    @property
+    def points(self):
+        return [n for n in self._nodes if isinstance(n, Point)]
+
+    @property
+    def path(self):
+        path = Path(
+            stroke_width=1,
+            stroke='black',
+            fill='black',
+            fill_opacity=0.0
+        )
+        path.M(self.start.x, self.start.y)
+        for node in self.points[1:]:
+            if isinstance(node, Flash):
+                pass
+            elif isinstance(node, Point):
+                path.L(node.x, node.y)
+
+        return path
+
+    def render(self, flashes=None):
         drawing = Drawing(self.width, self.height, origin=(0, 0))
-        for flash in self.flashes:
-            path = Path(
-                stroke_width=1,
-                stroke='black',
-                fill='black',
-                fill_opacity=0.0
-            )
-            path.M(flash.start.x, flash.start.y)
-            for node in flash._nodes[1:]:
-                if isinstance(node, Flash):
-                    pass
-                elif isinstance(node, Point):
-                    path.L(node.x, node.y)
-
-            path.L(flash.end.x, flash.end.y)
-            drawing.append(path)
+        for flash in flashes or self.flashes:
+            drawing.append(flash.path)
         return drawing
 
 
 if __name__ == '__main__':
+    try:
+        nodes = int(sys.argv[1])
+    except (ValueError, IndexError):
+        nodes = 23
 
-    nodes = 99
     flash = Flash()
-    for n in range(nodes):
+    flashes = [flash]
+    current = 0
+    for _ in range(nodes):
+        if flash.current_point().within_perimeter(flash.end, 10):
+            flash = Flash()
+            flashes.append(flash)
+            current += 1
         flash.random_walk()
 
-    drawing = flash.render()
+    drawing = Drawing(500, 500, origin=(0, 0))
+    for flash in flashes:
+        drawing.append(flash.path)
     drawing.saveSvg('/tmp/flash.svg')
