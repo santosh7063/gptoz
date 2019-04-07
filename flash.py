@@ -167,8 +167,14 @@ class Flash(object):
             return b.translate(*nv.ab)
 
         node = next_node(length)
+        retry = 10
         while not node.within_limits(self. width, self.height):
             node = next_node(length)
+            retry -= 1
+            # safety catch against infinite looping
+            if retry == 0:
+                node = self.random_point()
+                break
         self.add_node(node)
 
     def add_node(self, node=None):
