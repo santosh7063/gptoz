@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function, division
+from sys import stdout
+import argparse
+import os
 import cv2
 import numpy as np
 import random
@@ -78,9 +81,45 @@ class Grid(object):
 
 if __name__ == '__main__':
 
-    gol = Grid(width=100, height=60)
-    gol.randomize()
-    for i in range(99):
+    ap = argparse.ArgumentParser('Cellular Automata Playground')
+    ap.add_argument(
+        '-i', '--iterations', dest='iterations', type=int, action='store',
+        default=99,
+    )
+    ap.add_argument(
+        '-o', '--outdir', dest='outdir', action='store', default='/tmp',
+        help='output dir'
+    )
+    ap.add_argument(
+        '-W', '--width', dest='width', type=int, action='store',
+        default=200,
+        help='width'
+    )
+    ap.add_argument(
+        '-H', '--height', dest='height', type=int, action='store',
+        default=80,
+        help='height'
+    )
+    ap.add_argument(
+        '-I', '--image', dest='image', action='store',
+        help='init grid from image.'
+    )
+    args = ap.parse_args()
+
+    gol = Grid(width=args.width, height=args.height)
+
+    if args.image:
+        image = cv2.imread(args.image, cv2.IMREAD_GRAYSCALE)
+        gol.from_bitmap(image)
+    else:
+        gol.randomize()
+
+    for i in range(args.iterations):
+        cv2.imwrite(
+            os.path.join(args.outdir, '{:05d}.png'.format(i)),
+            gol.array * 255
+        )
         gol.step(rules='gol')
-        cv2.imwrite('/tmp/{:03d}.png'.format(i), gol.array)
-        progress(i, 99)
+        progress(i, args.iterations)
+
+    stdout.write('\n')
