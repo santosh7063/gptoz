@@ -196,7 +196,8 @@ class Flash(object):
             stroke_width=1,
             stroke='black',
             fill='black',
-            fill_opacity=0.0
+            fill_opacity=0.0,
+            stroke_miterlimit=25 # keep it pointy
         )
         path.M(self.start.x, self.start.y)
         for node in self.points[1:]:
