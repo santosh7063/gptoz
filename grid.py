@@ -11,10 +11,7 @@ class Grid(object):
     def __init__(self, width=20, height=20):
         self.width = width
         self.height = height
-        self._grid = [
-            [0 for cell in range(width)]
-            for line in range(height)
-        ]
+        self.clear()
 
     def randomize(self):
         self._grid = [
@@ -22,12 +19,32 @@ class Grid(object):
             for line in range(self.height)
         ]
 
+    def clear(self):
+        self._grid = [
+            [0 for cell in range(self.width)]
+            for line in range(self.height)
+        ]
+
+    def glider(self):
+        self.set_cell(0, 1, 1)
+        self.set_cell(1, 2, 1)
+        self.set_cell(2, 0, 1)
+        self.set_cell(2, 1, 1)
+        self.set_cell(2, 2, 1)
+
     @property
     def array(self):
         return np.array(self._grid)
 
     def get_cell(self, x, y):
         return self._grid[y][x]
+
+    def set_cell(self, x, y, value):
+        self._grid[y][x] = value
+
+    def from_bitmap(self, image):
+        self.height, self.width = image.shape
+        self._grid = image.clip(0, 1).tolist()
 
     def get_neighbours(self, x, y):
         ns = []
