@@ -51,9 +51,10 @@ class Grid(object):
             return 0
 
     def step(self, rules='gol'):
-        grid = self._grid.copy()
-        for y, line in enumerate(self._grid):
-            for x, cell in enumerate(line):
+        grid = []
+        for y, row in enumerate(self._grid):
+            grid.append(row.copy())
+            for x, cell in enumerate(row):
                 grid[y][x] = getattr(self, rules)(x, y, cell)
         self._grid = grid
 
