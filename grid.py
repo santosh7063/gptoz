@@ -39,6 +39,12 @@ class Grid(object):
     def array(self):
         return np.array(self._grid)
 
+    def get_row(self, i):
+        return self._grid[i]
+
+    def get_column(self, i):
+        return [cell[i] for cell in self._grid[i]]
+
     def get_cell(self, x, y):
         return self._grid[y][x]
 
@@ -87,6 +93,11 @@ if __name__ == '__main__':
         default=99,
     )
     ap.add_argument(
+        '-r', '--rules', dest='rules', action='store', default='gol',
+        help='ruleset algorithms\n'
+        + 'gol :: conways game of life\n'
+    )
+    ap.add_argument(
         '-o', '--outdir', dest='outdir', action='store', default='/tmp',
         help='output dir'
     )
@@ -119,7 +130,7 @@ if __name__ == '__main__':
             os.path.join(args.outdir, '{:05d}.png'.format(i)),
             gol.array * 255
         )
-        gol.step(rules='gol')
+        gol.step(rules=args.rules)
         progress(i, args.iterations)
 
     stdout.write('\n')
