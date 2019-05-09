@@ -30,24 +30,16 @@ class Glider(object):
         )[index]
 
     def turn_left(self):
-        if self.direction == (1, 0):
-            self.direction = (0, 1)
-        elif self.direction == (0, 1):
-            self.direction = (-1, 0)
-        elif self.direction == (-1, 0):
-            self.direction = (0, -1)
-        elif self.direction == (0, -1):
-            self.direction = (1, 0)
+        self.direction = (
+            -self.direction[1],
+            self.direction[0]
+        )
 
     def turn_right(self):
-        if self.direction == (1, 0):
-            self.direction = (0, -1)
-        elif self.direction == (0, 1):
-            self.direction = (1, 0)
-        elif self.direction == (-1, 0):
-            self.direction = (0, 1)
-        elif self.direction == (0, -1):
-            self.direction = (-1, 0)
+        self.direction = (
+            self.direction[1],
+            -self.direction[0]
+        )
 
     def move(self):
         self.trail = ([(self.x, self.y)] + self.trail)[:self.length]
