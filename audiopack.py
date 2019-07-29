@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 from collections import namedtuple
 from scipy.io import wavfile
-from scipy.fftpack import fft
+from scipy.fftpack import rfft
 import numpy as np
-
-
 """
 An audio-visualizing toolbox
 """
@@ -70,14 +68,12 @@ def audio_chunks(data, blocksize):
 
 
 def spectrum(block, N, bins=None):
-    s = 2.0/N * np.abs(fft(block)[:N//2])
-    if bins is not None:
-        r = []
-        for i in range(bins):
-            rel = len(s)//bins
-            r.append(sum(s[i*rel: (i+1)*rel]))
-        return r
-    return s
+    s = 2.0/N * np.abs(rfft(block))
+    if bins is None:
+        return s
+    else:
+        rel = len(s)//bins
+        return [sum(s[i*rel: (i+1)*rel]) for i in range(bins)]
 
 
 def rms(block):
