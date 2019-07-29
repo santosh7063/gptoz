@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-from __future__ import print_function
 import os
 import glob
 import sys
@@ -15,11 +14,13 @@ def error(msg):
 
 def save_frame(args, number, frame):
     print("writing frame %06d" % number)
-    cv2.imwrite(os.path.join(args.outdir, "frame_%06d.png"%number), frame)
+    cv2.imwrite(os.path.join(args.outdir, "frame_%06d.png" % number), frame)
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='create video feedback along a range of frames')
+    parser = argparse.ArgumentParser(
+        description='create video feedback along a range of frames'
+    )
     parser.add_argument('imagedir', metavar='imagedir', type=str,
         help='directory with images to be whited out'
     )
@@ -77,7 +78,7 @@ if __name__ == '__main__':
         if n > start and n < start+length:
             if args.rate is None:
                 # fixed rate
-                frame = frame + args.amount * cv2.GaussianBlur(oldframe, (3, 3), args.blur)
+                frame += args.amount * cv2.GaussianBlur(oldframe, (3, 3), args.blur)
             else:
             # changing rate>>
                 rate  = float(n-start)/float(length)
