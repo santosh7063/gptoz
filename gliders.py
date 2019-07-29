@@ -49,7 +49,7 @@ class Glider(object):
     def add_to_grid(self, grid):
         grid[self.y][self.x] = 1
         for i, (x, y) in enumerate(self.trail):
-            grid[y][x] = (1, 1, 1, 1, 1, 1, 0.9, 0.8, 0.4, 0)[i]
+            grid[y][x] = (1, 1, 1, 1, 1, 1, 0.9, 0.8, 0.4, 0.1)[i]
         return grid
 
 
