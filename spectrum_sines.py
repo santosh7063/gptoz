@@ -65,7 +65,6 @@ if __name__ == '__main__':
     print("%d Frames at %d samples" % (blocks, blocksize))
 
     N = blocksize
-    T = 1.0 / blocksize * 1.25
     for n, b in enumerate(audio_chunks(data, blocksize)):
         padded = "{0:05d}".format(n+1)
         img = np.zeros((args.height, args.width, 3), np.uint8)
