@@ -13,7 +13,7 @@ from flash import Flash
 ### Data visualization functions
 ##
 #
-def scatter(drawing, data, width, height, reflect):
+def scatter(drawing, data, width, height, reflect, opts={}):
     """ plot pairs of samples as coordinates """
     path = Path(stroke_width=1, stroke='black', fill='black', fill_opacity=0.0)
     cx, cy = (width * 0.5, height * 0.5)
@@ -30,7 +30,7 @@ def scatter(drawing, data, width, height, reflect):
     return drawing
 
 
-def osci(drawing, data, width, height, reflect):
+def osci(drawing, data, width, height, reflect, opts={}):
     """ Draw a path from left to right, sample on y """
     path = Path(stroke_width=1, stroke='black', fill='black', fill_opacity=0.0)
     path.M(0., height * 0.5)
@@ -44,7 +44,7 @@ def osci(drawing, data, width, height, reflect):
     return drawing
 
 
-def cross(drawing, data, width, height, reflect):
+def cross(drawing, data, width, height, reflect, opts={}):
     path = Path(stroke_width=1, stroke='black', fill='black', fill_opacity=0.0)
     path.M(width * 0.5, height * 0.5)
     spec = spectrum(data, len(data))
@@ -58,7 +58,7 @@ def cross(drawing, data, width, height, reflect):
     return drawing
 
 
-def flash(drawing, data, width, height, reflect):
+def flash(drawing, data, width, height, reflect, opts={}):
     flash = Flash(width=width, height=height)
     flashes = [flash]
     nodes = len(data) // 2
@@ -74,15 +74,15 @@ def flash(drawing, data, width, height, reflect):
             )
 
     for flash in flashes:
-        drawing.append(flash.path)
+        drawing = flash.render(drawing, opts.get('thickness'))
 
     return drawing
 
 
-def render_frame(drawing, data, plotter=None, width=600, height=400, reflect=(1,1)):
+def render_frame(drawing, data, plotter=None, width=600, height=400, reflect=(1,1), opts={}):
     """ Wrap the renderer so different plugin plotters can be used """
     try:
         plotter = globals()[plotter]
     except KeyError:
         plotter = scatter
-    return plotter(drawing, data, width, height, reflect)
+    return plotter(drawing, data, width, height, reflect, opts)

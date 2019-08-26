@@ -3,7 +3,20 @@ from __future__ import print_function, division
 import sys
 import math
 import random
+from numpy import dot
 from drawSvg import Drawing, Path
+
+
+def angle_between(v1, v2):
+    u = v1.normal_form
+    v = v2.normal_form
+    try:
+        return math.acos(
+            dot(u, v) / dot(v1.length, v2.length)
+        )
+    except ValueError:
+        print('value error: {0!r} {1!r}'.format(u, v))
+        return math.pi
 
 
 class Point(object):
@@ -67,6 +80,13 @@ class Vector(object):
             start.y + length * math.sin(phi),
         )
         return Vector(start, end)
+
+    @property
+    def normal_form(self):
+        """
+        B - A, assume 0, 0 origin
+        """
+        return (self.a.x - self.b.x, self.a.y - self.b.y)
 
     @property
     def a(self):
@@ -191,6 +211,13 @@ class Flash(object):
         return [n for n in self._nodes if isinstance(n, Point)]
 
     @property
+    def edges(self):
+        return [
+            Vector(self.points[i], p)
+            for i, p in enumerate(self.points[1:])
+        ]
+
+    @property
     def path(self):
         path = Path(
             stroke_width=1,
@@ -201,17 +228,46 @@ class Flash(object):
         )
         path.M(self.start.x, self.start.y)
         for node in self.points[1:]:
-            if isinstance(node, Flash):
-                pass
-            elif isinstance(node, Point):
-                path.L(node.x, node.y)
+            path.L(node.x, node.y)
 
         return path
 
-    def render(self, flashes=None):
-        drawing = Drawing(self.width, self.height, origin=(0, 0))
-        for flash in flashes or self.flashes:
-            drawing.append(flash.path)
+    def render_path(self, thickness=1.0):
+        """
+        Render double lined, filled flash path
+        """
+        path = Path(
+            stroke_width=1,
+            stroke='black',
+            fill='black',
+            fill_opacity=1.0,
+            stroke_miterlimit=99 # keep it pointy
+        )
+        path.M(self.start.x, self.start.y)
+
+        for node in self.points[1:]:
+            path.L(node.x, node.y)
+
+        backflash = []
+        for i, v1 in enumerate(self.edges):
+            lp = len(self.points)
+            if i < lp - 2:
+                v2 = self.edges[i + 1]
+                assert v1.b == v2.a
+                phi = angle_between(v1, v2)
+                distance = thickness - (thickness / (i + 1))
+                point = Vector.from_polar(v1.b, phi, distance)
+                backflash.append(point)
+
+        for p in reversed(backflash):
+            path.L(p.b.x, p.b.y)
+
+        path.Z()
+        return path
+
+    def render(self, drawing=None, thickness=1.0):
+        drawing = drawing or Drawing(self.width, self.height, origin=(0, 0))
+        drawing.append(self.render_path(thickness))
         return drawing
 
 
@@ -233,5 +289,5 @@ if __name__ == '__main__':
 
     drawing = Drawing(500, 500, origin=(0, 0))
     for flash in flashes:
-        drawing.append(flash.path)
+        drawing.append(flash.render_path())
     drawing.saveSvg('/tmp/flash.svg')

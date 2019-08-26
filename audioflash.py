@@ -31,6 +31,9 @@ if __name__ == '__main__':
     parser.add_argument('-H', '--height', dest='height', type=int, action='store', default=720,
         help='height'
     )
+    parser.add_argument('-t', '--thickness', dest='thickness', type=float, action='store', default=1.0,
+        help='flash segment thickness'
+    )
     args = parser.parse_args()
 
     meta, data = loadwav(args.soundfile)
@@ -38,8 +41,11 @@ if __name__ == '__main__':
     blocksize  = meta.rate // args.fps
     blocks     = meta.samples // blocksize
 
+    if not os.path.exists(args.outdir):
+        os.mkdir(args.outdir)
+
     for n, b in enumerate(audio_chunks(data, blocksize)):
-        padded = "{0:03d}".format(n)
+        padded = "{0:05d}".format(n)
         drawing = Drawing(args.width, args.height, origin=(0, 0))
 
         if len(b) < blocksize:
@@ -54,7 +60,8 @@ if __name__ == '__main__':
                     plotter='flash',
                     width=args.width,
                     height=args.height,
-                    reflect=reflect[i % meta.channels]
+                    reflect=reflect[i % meta.channels],
+                    opts={'thickness': args.thickness}
                 )
         else:
             if meta.channels > 1:
@@ -64,7 +71,8 @@ if __name__ == '__main__':
                 b,
                 plotter='flash',
                 width=args.width,
-                height=args.height
+                height=args.height,
+                opts={'thickness': args.thickness}
             )
 
         drawing.saveSvg(os.path.join(args.outdir, "audioflash_"+padded+'.svg'))
