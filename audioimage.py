@@ -6,27 +6,47 @@ import numpy as np
 from scipy.fftpack import rfft
 import audiopack as ap
 import lib
+from itertools import zip_longest
 
 
 def triple(i):
     return (i, i, i)
 
+
+def group(iterable, n, fillvalue=None):
+    args = [iter(iterable)] * n
+    return zip_longest(*args, fillvalue=fillvalue)
+
+
 def render_frame(img, data, blocksize, width, height):
-    spectrum = [triple(255 * (0, 1)[s > 0]) for s in rfft(data)]
+#    spectrum = [triple(255 * (0, 1)[s > -0.5 and s < 0.5]) for s in rfft(data)]
+    fft = rfft(data)
+    spectrum = np.abs(data / np.linalg.norm(data))
     offset = len(spectrum) // height
     new_block = np.full(
         (height, offset, 3),
         0,
         dtype=np.uint8
     )
-    new_block = np.resize(spectrum, (height, offset, 3))
-    img[:,-offset:] = new_block
+    for x1, y1, x2, y2 in group(spectrum, 4, 0):
+        pt1 = (int(width * x1), int(10 * height * y1))
+        pt2 = (int(width * x2), int(10 * height * y2))
+        cv2.rectangle(
+            new_block,
+            pt1,
+            pt2,
+            (255, 255, 255),
+            cv2.FILLED
+        )
+
+#    new_block = np.resize(spectrum, (height, offset, 3))
+    img[:,-offset:] = np.flipud(new_block)
     return img
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description='create video feedback along a range of frames'
+        description='Create scrolling strips of imagery from spectrum'
     )
     parser.add_argument('audiofile', metavar='audiofile', type=str,
         help='Audiofile'
@@ -63,9 +83,9 @@ if __name__ == '__main__':
     blocksize = meta.rate // args.fps
     blocks = meta.samples // blocksize
     scroll = blocksize // args.height
-    lastimg = None
+    last_img = None
     for i, block in enumerate(ap.audio_chunks(audio, blocksize)):
-        img = lastimg if lastimg is not None else image
+        img = last_img if last_img is not None else image
         img = render_frame(
             img,
             block.T[0] if meta.channels > 1 else block,
@@ -74,8 +94,8 @@ if __name__ == '__main__':
             height=args.height
         )
         cv2.imwrite(os.path.join(args.outdir, '{0:05d}.png'.format(i+1)), img)
-        lastimg = np.zeros(img.shape, img.dtype)
+        last_img = np.zeros(img.shape, img.dtype)
         # scroll left
-        lastimg[:,0:args.width-scroll] = img[:,scroll:]
+        last_img[:,0:args.width-scroll] = img[:,scroll:]
         # progress
         lib.progress(i, blocks)
