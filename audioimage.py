@@ -3,7 +3,6 @@ import os
 import argparse
 import cv2
 import numpy as np
-from scipy.fftpack import rfft
 import audiopack as ap
 import lib
 from itertools import zip_longest
@@ -18,9 +17,23 @@ def group(iterable, n, fillvalue=None):
     return zip_longest(*args, fillvalue=fillvalue)
 
 
-def render_frame(img, data, blocksize, width, height):
+def render_frame(*args, raw=False):
+    if raw:
+        return render_frame_raw(*args)
+    else:
+        return render_frame_spectrum(*args)
+
+
+def render_frame_raw(img, data, blocksize, width, height):
+    data = np.abs(data * 255)
+    offset = len(data) // height
+    new_block = np.resize(data, (height, offset, 3))
+    img[:,-offset:] = new_block
+    return img
+
+
+def render_frame_spectrum(img, data, blocksize, width, height):
 #    spectrum = [triple(255 * (0, 1)[s > -0.5 and s < 0.5]) for s in rfft(data)]
-    fft = rfft(data)
     spectrum = np.abs(data / np.linalg.norm(data))
     offset = len(spectrum) // height
     new_block = np.full(
@@ -63,8 +76,8 @@ if __name__ == '__main__':
     parser.add_argument('-f', '--fps', dest='fps', type=int, action='store', default=25,
         help='video framerate'
     )
-    parser.add_argument('-b', '--blur', dest='blur', type=float, action='store', default=5.0,
-        help='blur amount'
+    parser.add_argument('-R', '--raw', dest='raw', action='store_true',
+        help='use raw audio buffer'
     )
     parser.add_argument('-s', '--startframe', dest='start', type=int, action='store', default=1,
         help='start frame'
@@ -90,8 +103,9 @@ if __name__ == '__main__':
             img,
             block.T[0] if meta.channels > 1 else block,
             blocksize,
-            width=args.width,
-            height=args.height
+            args.width,
+            args.height,
+            raw=args.raw,
         )
         cv2.imwrite(os.path.join(args.outdir, '{0:05d}.png'.format(i+1)), img)
         last_img = np.zeros(img.shape, img.dtype)
