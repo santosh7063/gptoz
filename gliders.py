@@ -1,5 +1,4 @@
 #/usr/bin/env python3
-from __future__ import print_function, division
 from sys import stdout
 import argparse
 import os
