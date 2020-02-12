@@ -124,6 +124,9 @@ class Vector(object):
         x, y = self.heading
         return math.atan2(x, y)
 
+    def dot(self, v):
+        return self.ab[0] * v.ab[0] + self.ab[1] * v.ab[1]
+
 
 class Flash(object):
 
