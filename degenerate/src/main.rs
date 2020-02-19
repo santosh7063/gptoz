@@ -4,7 +4,12 @@ extern crate rand;
 use std::f64::consts::{E, PI, SQRT_2};
 use rand::random;
 
+mod lib;
+
+use lib::draw_shape;
+
 const PHI: f64 = 1.618033988749;
+const ATAN_SATURATION: f64 = 1.569796;
 
 fn main() {
 
@@ -22,7 +27,7 @@ fn main() {
     let cx: f64 = imgx as f64 / 2.;
     let cy: f64 = imgy as f64 / 2.;
     let mut r: f64 = 235.0;
-    let iterations: u32 = imgx*imgy * 64; // arbitrary
+    let iterations: u32 = 20000; // imgx*imgy; // arbitrary
 
     let mut c: f64;
     let mut c2: f64;
@@ -41,16 +46,14 @@ fn main() {
         y = (cy + c.cos() * r + (c * PHI) * ((x as f64 * z * (imgx as f64))).sqrt() as f64).round() as u32 % imgy;
         z = (
                 //(x as f64).sin() * (i as f64) + (y as f64).cos() * 2.3f64.powf(x as f64)
-                /*
-                ((((x as f64).sin() * PI * (y as f64 + z)).cos() + c.sqrt() + (E * c.cos()) * (SQRT_2 * (y as f64).cos()) * c3.sqrt() * c2.cos()).atan() / 1.569796)
+                ((((x as f64).sin() * PI * (y as f64 + z)).cos() + c.sqrt() + (E * c.cos()) * (SQRT_2 * (y as f64).cos()) * c3.sqrt() * c2.cos()).atan() / ATAN_SATURATION)
                 *
-                ((((x as f64).sin() * PI * (y as f64 + z)).cos() + (c + z).powf(E) + (E * c.cos()) * (SQRT_2 * (y as f64).powf(3.).cos()) * (c3 * c2).sqrt() * c2.cos().powf(2.)).atan() / 1.569796)
-                */
+                ((((x as f64).sin() * PI * (y as f64 + z)).cos() + (c + z).powf(E) + (E * c.cos()) * (SQRT_2 * (y as f64).powf(3.).cos()) * (c3 * c2).sqrt() * c2.cos().powf(2.)).atan() / ATAN_SATURATION)
                 //c.cos() * c.tan() * c3.cos() * (x as f64 + z.powf(c)).sin()
-                (c.powf(SQRT_2).cos() * c2.powf(3.).tan() * c3.powf(2.).cos() * (x as f64 + z.powf(c)).sin()).atan() / 1.569796
+                // (c.powf(SQRT_2).cos() * c2.powf(3.).tan() * c3.powf(2.).cos() * (x as f64 + z.powf(c)).sin()).atan() / ATAN_SATURATION
         ).abs();
-        // atan saturates at ~ 1.569796
-        zs[x as usize][y as usize] += z;
+        // zs[x as usize][y as usize] += z;
+        draw_shape(&mut zs, x, y, z);
 
 //        let pixel = imgbuf.get_pixel_mut(x, y);
 //        let data = (*pixel as image::Luma<u8>).0;
