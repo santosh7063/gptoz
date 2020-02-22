@@ -51,7 +51,7 @@ fn main() {
                 *
                 ((((x as f64).sin() * PI * (y as f64 + z)).cos() + (c + z).powf(E) + (E * c.cos()) * (SQRT_2 * (y as f64).powf(3.).cos()) * (c3 * c2).sqrt() * c2.cos().powf(2.)).atan() / ATAN_SATURATION)
                 //c.cos() * c.tan() * c3.cos() * (x as f64 + z.powf(c)).sin()
-                //(c.powf(SQRT_2).cos() * c2.powf(3.).tan() * c3.powf(2.).cos() * (x as f64 + z.powf(c)).sin()).atan() / ATAN_SATURATION
+                * (c.powf(SQRT_2).cos() * c2.powf(3.).tan() * c3.powf(2.).cos() * (x as f64 + z.powf(c)).sin()).atan() / ATAN_SATURATION
         ).abs();
         r -= 235.0 / iterations as f64;
         zs[x as usize][y as usize] += z;
