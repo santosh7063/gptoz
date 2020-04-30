@@ -37,7 +37,7 @@ fn spiral(n: i32) -> (i32, i32) {
 }
 
 pub fn draw_shape(buffer: &mut Vec<Vec<f64>>, center_x: u32, center_y: u32, z: f64) {
-    let iterations: u32 = (10. * z).ceil() as u32;
+    let iterations: u32 = (5. * z).ceil() as u32;
     let max_x = buffer.len();
     let max_y = buffer[0].len();
 
