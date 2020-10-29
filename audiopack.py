@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+from typing import Iterator
 from collections import namedtuple
 from scipy.io import wavfile
 from scipy.fftpack import rfft
@@ -58,7 +58,7 @@ def loadwav(filename):
     return meta, data
 
 
-def audio_chunks(data, blocksize):
+def audio_chunks(data, blocksize) -> Iterator:
     """Yield successive n-sized chunks from l."""
     for i in range(0, len(data), blocksize):
         block = data[i:i+blocksize]

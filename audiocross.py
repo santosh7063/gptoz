@@ -42,6 +42,7 @@ if __name__ == '__main__':
 
         if len(b) < blocksize:
             b = np.lib.pad(b, ((blocksize-len(b)) // 2), 'constant')
+
         if args.multichannel and meta.channels > 1:
             reflect = [(1,1), (-1,1), (1,-1), (-1,-1)]
             for i in range(meta.channels-1):
