@@ -1,44 +1,49 @@
 #!/usr/bin/env python3
 from typing import List, Tuple
 from os import path
-from aubio import fvec, level_lin
-from math import pi
+from aubio import fft, fvec, level_lin
 import argparse
 import cv2
 import numpy as np
 
-from audiopack import loadwav, audio_chunks, spectrum
+from audiopack import loadwav, audio_chunks
 """
 Render blurry blob, dancing around the image to the music
 """
 
 
-def blob(image, data = Tuple[List, List]):
+def blob(image, data: Tuple[List, List]):
     height, width, _ = image.shape
+
     cx = width // 2
     cy = height // 2
 
     d1, d2 = data
-    s1 = spectrum(d1, len(d1))
-    s2 = spectrum(d2, len(d2))
+
+    f = fft(len(d1))
+    s1 = f.rdo(f(fvec(d1)))
+    s2 = f.rdo(f(fvec(d2)))
 
     level = level_lin(fvec(d1 + d2))
 
-    for i, j, k, n in zip(d1, s1, d2, s2):
-        x = cx + int(n * width * 0.5)
-        y = cy + int((height * j * 0.5))
+    for i, j, k, n in zip(d1, s1, reversed(d2), s2):
+
+        x = cx + int(i * width * 0.5)
+        y = cy + int((height * k * 0.5))
+
         radius = level * 1000
-        r1 = int(k * radius)
-        r2 = int(i * radius)
+        r1 = int(j * radius)
+        r2 = int(n * radius)
         if r1 > 0 and r2 > 0:
             cv2.ellipse(image, (x, y), (r1, r2), 0, 0, 360, (255, 255, 255))
             image = cv2.GaussianBlur(image, (5, 5), 0)
+
     return image
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description='convert audiofile to dancing blob on an image bitmap'
+        description='Parse audiofile to dancing blob'
     )
     parser.add_argument('soundfile', metavar='soundfile', type=str,
         help='soundfile'
