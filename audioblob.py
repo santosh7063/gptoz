@@ -25,11 +25,11 @@ def blob(image, data = Tuple[List, List]):
     level = level_lin(fvec(d1 + d2))
 
     for i, j, k, n in zip(d1, s1, d2, s2):
-        x = cx + int(i * width * 0.5)
+        x = cx + int(n * width * 0.5)
         y = cy + int((height * j * 0.5))
         radius = level * 1000
         r1 = int(k * radius)
-        r2 = int(n * radius)
+        r2 = int(i * radius)
         if r1 > 0 and r2 > 0:
             cv2.ellipse(image, (x, y), (r1, r2), 0, 0, 360, (255, 255, 255))
             image = cv2.GaussianBlur(image, (5, 5), 0)
