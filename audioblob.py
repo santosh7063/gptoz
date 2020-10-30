@@ -77,3 +77,6 @@ if __name__ == '__main__':
 
         image = blob(bitmap, block_channels)
         cv2.imwrite(path.join(args.outdir, f'{padded}.png'), image)
+
+        percent_finished = int(n / blocks * 100)
+        print(f'{percent_finished:>3}%', end='\r', flush=True)
