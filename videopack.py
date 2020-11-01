@@ -80,8 +80,9 @@ def flash(drawing, data, width, height, reflect, opts=None):
     return drawing
 
 
-def render_frame(drawing, data, plotter=None, width=600, height=400, reflect=(1, 1), opts={}):
+def render_frame(drawing, data, plotter=None, width=600, height=400, reflect=(1, 1), opts=None):
     """ Wrap the renderer so different plugin plotters can be used """
+    opts = opts or {}
     try:
         plotter = globals()[plotter]
     except KeyError:

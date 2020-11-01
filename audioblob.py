@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from typing import List, Tuple
+from dataclasses import dataclass
 from os import path
 from aubio import fft, fvec, level_lin
 import argparse
@@ -12,7 +13,12 @@ Render blurry blob, dancing around the image to the music
 """
 
 
-def blob(image, data: Tuple[List, List]):
+@dataclass
+class Opts:
+    radius: int
+
+
+def blob(image, data: Tuple[List, List], opts: Opts):
     height, width, _ = image.shape
 
     cx = width // 2
@@ -31,7 +37,7 @@ def blob(image, data: Tuple[List, List]):
         x = cx + int(i * width * 0.5)
         y = cy + int((height * k * 0.5))
 
-        radius = level * 1000
+        radius = level * opts.radius
         r1 = int(j * radius)
         r2 = int(n * radius)
         if r1 > 0 and r2 > 0:
@@ -60,12 +66,17 @@ if __name__ == '__main__':
     parser.add_argument('-f', '--fps', dest='fps', type=int, action='store', default=25,
         help='frames per second'
     )
+    parser.add_argument('-r', '--radius', dest='radius', type=int, action='store', default=1000,
+        help='frames per second'
+    )
     args = parser.parse_args()
 
     meta, data = loadwav(args.soundfile)
 
     blocksize: int = meta.rate // args.fps
     blocks: int    = meta.samples // blocksize
+
+    opts = Opts(radius=args.radius)
 
     for n, block in enumerate(audio_chunks(data, blocksize)):
         padded = "{0:05d}".format(n)
@@ -75,7 +86,7 @@ if __name__ == '__main__':
         else:
             block_channels = np.array_split(data, 2)
 
-        image = blob(bitmap, block_channels)
+        image = blob(bitmap, block_channels, opts)
         cv2.imwrite(path.join(args.outdir, f'{padded}.png'), image)
 
         percent_finished = int(n / blocks * 100)
