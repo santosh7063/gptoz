@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+"""
+Render blurry blob, "dancing" to the music
+"""
 from typing import List, Tuple
 from dataclasses import dataclass
 from os import path
@@ -8,9 +11,6 @@ import cv2
 import numpy as np
 
 from audiopack import loadwav, audio_chunks
-"""
-Render blurry blob, dancing around the image to the music
-"""
 
 
 @dataclass
@@ -32,17 +32,21 @@ def blob(image, data: Tuple[List, List], opts: Opts):
 
     level = level_lin(fvec(d1 + d2))
 
-    for i, j, k, n in zip(d1, s1, reversed(d2), s2):
+    for i, j, k, n, rk, rn in zip(d1, d2, s1, s2, reversed(s1), reversed(s2)):
 
-        x = cx + int(i * width * 0.5)
-        y = cy + int((height * k * 0.5))
+        x = cx + int(j * width) - int(i * width)
+        y = cy + int(height * k) - int(rk * height)
 
         radius = level * opts.radius
-        r1 = int(j * radius)
+        r1 = int(k * radius)
         r2 = int(n * radius)
+
+        blur_x = 5
+        blur_y = 5
+
         if r1 > 0 and r2 > 0:
             cv2.ellipse(image, (x, y), (r1, r2), 0, 0, 360, (255, 255, 255))
-            image = cv2.GaussianBlur(image, (5, 5), 0)
+            image = cv2.GaussianBlur(image, (blur_x, blur_y), 0)
 
     return image
 

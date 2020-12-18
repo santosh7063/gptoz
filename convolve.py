@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import argparse
 import cv2
 import numpy as np
@@ -29,7 +30,7 @@ if __name__ == '__main__':
         help='signal: time domain, fft: frequency domain'
     )
     parser.add_argument('-a', '--amplify', dest='amplify', type=float, action='store', default=100,
-        help='amplify weak signal or spectrum'
+        help='amplify signal or spectrum'
     )
     parser.add_argument('-W', '--width', dest='width', type=int, action='store', default=1280,
         help='width'
@@ -39,6 +40,9 @@ if __name__ == '__main__':
     )
     parser.add_argument('-f', '--fps', dest='fps', type=int, action='store', default=25,
         help='frames per second'
+    )
+    parser.add_argument('-t', '--trigger', dest='trigger', action='store_true',
+        help='Stabilize on waveform features'
     )
     args = parser.parse_args()
 
@@ -62,11 +66,11 @@ if __name__ == '__main__':
         padded = "{0:05d}".format(n)
         bitmap = cv2.imread(imgfile, cv2.IMREAD_GRAYSCALE)
         if args.mode == 'fft':
-            block = spectrum(block, meta.rate) * args.amplify
+            block = spectrum(block, meta.rate)
         if shape:
             block = np.reshape(block, shape)
 
-        image = fftconvolve(bitmap, block, mode='same')
+        image = fftconvolve(bitmap, block * args.amplify, mode='same')
         cv2.imwrite(path.join(args.outdir, f'{padded}.png'), image)
 
         percent_finished = int(n / blocks * 100)
