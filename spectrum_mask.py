@@ -19,7 +19,7 @@ def gray_frame(img, spectrum, spread, blocksize, height):
     return img
 
 
-def render_frame(img, spectrum, threshold, spread, width, height):
+def render_frame(img, spectrum, threshold, thickness, spread, width, height):
     blocksize = len(spectrum)
     if threshold == 0:
         return gray_frame(img, spectrum, spread, blocksize, height)
@@ -27,9 +27,10 @@ def render_frame(img, spectrum, threshold, spread, width, height):
     for n, f in enumerate(spectrum):
         if np.abs(f) > threshold:
             try:
-                barsize = (f * spread + 1/n ) ** 2
+                barsize = thickness * (f * spread + 1/n) ** 2
             except ZeroDivisionError:
                 barsize = 0
+
             yoff = int(height/2 * n/blocksize * spread/2.)
             if n % 2 == 0:
                 yoff = -yoff
@@ -65,6 +66,9 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--threshold', dest='threshold', type=float, action='store', default=0.1,
         help='threshold. if set to zero, values are grayscaled'
     )
+    parser.add_argument('-T', '--thickness', dest='thickness', type=float, action='store', default=1,
+        help='threshold. if set to zero, values are grayscaled'
+    )
     parser.add_argument('-s', '--spread', dest='spread', type=float, action='store', default=1.,
         help='spread. if set to zero will try and follow block energy'
     )
@@ -93,6 +97,7 @@ if __name__ == '__main__':
                     img,
                     spectrum(b.T[i], N),
                     threshold=args.threshold,
+                    thickness=args.thickness,
                     spread=args.spread or rms(b.T[i]) * 4,
                     width=args.width,
                     height=args.height
@@ -104,6 +109,7 @@ if __name__ == '__main__':
                 img,
                 spectrum(b, N),
                 threshold=args.threshold,
+                thickness=args.thickness,
                 spread=args.spread or rms(b) * 4,
                 width=args.width,
                 height=args.height
