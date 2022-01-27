@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """
-Render blurry blob, "dancing" to the music
+Render blurry blob, dancing to the music
+TODO:
+    - add damping
+    - sync using aubiotempo
 """
 from typing import List, Tuple
 from dataclasses import dataclass
@@ -58,24 +61,29 @@ if __name__ == '__main__':
     parser.add_argument('soundfile', metavar='soundfile', type=str,
         help='soundfile'
     )
-    parser.add_argument('-o', '--outdir', dest='outdir', action='store', default='/tmp/',
+    parser.add_argument('-a', '--amplify', action='store', type=float, default=1.0,
+        help='amplify audio frames'
+    )
+    parser.add_argument('-o', '--outdir', action='store', default='/tmp/',
         help='output directory'
     )
-    parser.add_argument('-W', '--width', dest='width', type=int, action='store', default=1280,
+    parser.add_argument('-W', '--width', type=int, action='store', default=1280,
         help='width'
     )
-    parser.add_argument('-H', '--height', dest='height', type=int, action='store', default=720,
+    parser.add_argument('-H', '--height', type=int, action='store', default=720,
         help='height'
     )
-    parser.add_argument('-f', '--fps', dest='fps', type=int, action='store', default=25,
+    parser.add_argument('-f', '--fps', type=int, action='store', default=25,
         help='frames per second'
     )
-    parser.add_argument('-r', '--radius', dest='radius', type=int, action='store', default=1000,
+    parser.add_argument('-r', '--radius', type=int, action='store', default=1000,
         help='frames per second'
     )
     args = parser.parse_args()
 
     meta, data = loadwav(args.soundfile)
+
+    data = data * args.amplify
 
     blocksize: int = meta.rate // args.fps
     blocks: int    = meta.samples // blocksize
