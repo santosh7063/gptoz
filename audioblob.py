@@ -77,7 +77,7 @@ if __name__ == '__main__':
         help='frames per second'
     )
     parser.add_argument('-r', '--radius', type=int, action='store', default=1000,
-        help='frames per second'
+        help='base radius of the circles'
     )
     args = parser.parse_args()
 
