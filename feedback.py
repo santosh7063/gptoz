@@ -4,6 +4,7 @@ import glob
 import sys
 import argparse
 import cv2
+import json
 import numpy as np
 
 
@@ -68,6 +69,9 @@ if __name__ == '__main__':
     length = args.length if args.length > 0 else len(imagefiles)-start
 
     print("%d frames, starting at %d" % (len(imagefiles), start))
+
+    with open(os.path.join(args.outdir or './', 'params.json'), 'w') as f:
+        json.dump(args.__dict__, f)
 
     for n, imgf in enumerate(imagefiles):
         if n >= start and n < start+length:

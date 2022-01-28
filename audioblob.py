@@ -7,6 +7,7 @@ TODO:
 """
 from typing import List, Tuple
 from dataclasses import dataclass
+import json
 from os import path
 from aubio import fft, fvec, level_lin
 import argparse
@@ -89,6 +90,9 @@ if __name__ == '__main__':
     blocks: int    = meta.samples // blocksize
 
     opts = Opts(radius=args.radius)
+
+    with open(path.join(args.outdir, 'params.json'), 'w') as f:
+        json.dump(args.__dict__, f)
 
     for n, block in enumerate(audio_chunks(data, blocksize)):
         padded = "{0:05d}".format(n)

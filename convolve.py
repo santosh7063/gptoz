@@ -2,6 +2,7 @@
 
 import argparse
 import cv2
+import json
 import numpy as np
 from os import path
 from glob import glob
@@ -85,6 +86,11 @@ if __name__ == '__main__':
             amplify = 1
     else:
         amplify = args.amplify
+
+    with open(path.join(args.outdir, 'params.json'), 'w') as f:
+        params = args.__dict__
+        params['amplify'] = amplify
+        json.dump(params, f)
 
     for n, (block, imgfile) in enumerate(zip(audio_chunks(data, blocksize), cycle(files))):
         if n < start:
