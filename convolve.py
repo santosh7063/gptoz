@@ -38,7 +38,7 @@ if __name__ == '__main__':
         help='mix by loudness'
     )
     parser.add_argument('-a', '--amplify', dest='amplify', type=float, action='store',
-        help='amplify signal or spectrum'
+        help='amplify signal or spectrum. default depends on mode: 100 for fft, 1 for signal'
     )
     parser.add_argument('-W', '--width', dest='width', type=int, action='store', default=1280,
         help='width'
@@ -86,13 +86,12 @@ if __name__ == '__main__':
     else:
         amplify = args.amplify
 
-    for n, data_pair in enumerate(zip(audio_chunks(data, blocksize), cycle(files))):
+    for n, (block, imgfile) in enumerate(zip(audio_chunks(data, blocksize), cycle(files))):
         if n < start:
             continue
         if n > start+length:
             break
 
-        block, imgfile = data_pair
         padded = "{0:05d}".format(n)
         bitmap = cv2.imread(imgfile, cv2.IMREAD_GRAYSCALE)
         level = level_lin(fvec(block.T[0]))
