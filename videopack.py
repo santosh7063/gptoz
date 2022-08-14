@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
 from drawSvg import Path
-from math import pi, e, sin, cos, sqrt
+from math import pi, e
 import random
 from audiopack import spectrum
 from flash import Flash
