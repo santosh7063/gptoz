@@ -18,6 +18,7 @@ from audiopack import loadwav, audio_chunks
 
 @dataclass
 class Opt:
+    amount: float
     direction: str
 
 
@@ -35,21 +36,41 @@ def scrape(image, image_1, image_2, data: Tuple[List, List], height, width, opt:
         source = image_1
         modulator = image_2
         target = image
-        dim = height
+        dim = width
+        glow = (11, 1)
     else:
         source = image_1.T
         modulator = image_2.T
         target = image.T
-        dim = width
+        dim = height
+        glow = (1, 11)
+
+    kernel = np.array([[-1.0, -1.0],
+                       [2.0, 2.0],
+                       [-1.0, -1.0]])
+
+    kernel = kernel/(np.sum(kernel) if np.sum(kernel) != 0 else 1)
 
     for i, t in enumerate(target):
         for j, _ in enumerate(t):
-#            s1 = bins1[(i * dim + j) % block_length]
-#            s2 = bins2[(i * dim + j) % block_length]
-            index = int(j * modulator[i][j] / 255) % dim
+            index = int(j * (opt.amount * modulator[i][j]) / 255) % dim
             target[i][j] += source[i][index]
 
-    return image
+    img_blurred = cv2.GaussianBlur(cv2.filter2D(image, -1, kernel), glow, 1)
+
+#    for i, t in enumerate(target):
+#        s1 = bins1[i % block_length]
+#        for j, pixel in enumerate(t):
+#            s2 = bins2[(i * dim + j) % block_length]
+#            pixel_slice = target[i].take(
+#                range(j, j + 100 + int((s1 + s2) * 100)),
+#                mode='wrap'
+#            )
+#            for x, v in enumerate(sorted(pixel_slice)):
+#                y = ((j + x) % dim) - 1
+#                target[i][y] = v
+
+    return cv2.addWeighted(image, 1, img_blurred, 1, 0)
 
 
 if __name__ == '__main__':
@@ -62,7 +83,10 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--soundfile', action='store', type=str,
         help='soundfile'
     )
-    parser.add_argument('-a', '--amplify', action='store', type=float, default=1.0,
+    parser.add_argument('-a', '--amount', action='store', type=float, default=1,
+        help='effect strength'
+    )
+    parser.add_argument('-A', '--amplify', action='store', type=float, default=1.0,
         help='amplify audio frames'
     )
     parser.add_argument('-d', '--direction', action='store', type=str, default='x',
@@ -92,9 +116,15 @@ if __name__ == '__main__':
     image_set_1 = glob(args.images[0])
     image_set_2 = glob(args.images[1])
 
-    opt = Opt(direction=args.direction)
+    opt = Opt(direction=args.direction, amount=args.amount)
 
-    for n, (block, image_1, image_2) in enumerate(zip(audio_chunks(data, blocksize), cycle(image_set_1), cycle(image_set_2))):
+    for n, (block, image_1, image_2) in enumerate(
+        zip(
+            audio_chunks(data, blocksize),
+            cycle(image_set_1),
+            cycle(image_set_2)
+        )
+    ):
         padded = "{0:05d}".format(n)
         bitmap_1 = cv2.imread(image_1, cv2.IMREAD_GRAYSCALE)
         bitmap_2 = cv2.imread(image_2, cv2.IMREAD_GRAYSCALE)
