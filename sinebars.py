@@ -11,6 +11,9 @@ if __name__ == '__main__':
     parser.add_argument('-o', '--outdir', dest='outdir', action='store', default='/tmp',
         help='directory to write frame images to'
     )
+    parser.add_argument('-t', '--type', dest='type', action='store', default='svg',
+        help='output format: svg or png'
+    )
     parser.add_argument('-n', '--numbars', dest='numbars', type=int, action='store', default=1,
         help='number of bars'
     )
@@ -29,9 +32,10 @@ if __name__ == '__main__':
 
         drawing = Drawing(args.width, args.height, origin=(0, 0))
         padded = "{0:03d}".format(n)
+        filename = os.path.join(args.outdir, "sinebars_"+padded+'.'+args.type)
 
         cycle = n / args.iterations * 2 * pi
-        max_height = args.height / 10
+        max_height = args.height / e
         half_height = args.height / 2
 
         for i in range(args.numbars):
@@ -40,4 +44,7 @@ if __name__ == '__main__':
             rect = Rectangle(0, y, args.width, height, fill='white')
             drawing.append(rect)
 
-        drawing.saveSvg(os.path.join(args.outdir, "sinebars_"+padded+'.svg'))
+        if args.type == 'png':
+            drawing.savePng(filename)
+        elif args.type == 'svg':
+            drawing.saveSvg(filename)
