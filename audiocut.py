@@ -25,7 +25,7 @@ def get_timecodes(soundfile, beat):
 @click.argument('videofile')
 @click.option('-s', '--soundfile')
 @click.option('-o', '--outfile', default='output.mp4')
-@click.option('-b', '--beat')
+@click.option('-b', '--beat', is_flag=True)
 def main(videofile, soundfile, outfile, beat):
     timecodes = get_timecodes(soundfile, beat)
 
