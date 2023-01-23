@@ -1,6 +1,8 @@
 aubio
+click
 drawSvg
 matplotlib
+moviepy
 numpy
 opencv-python
 scipy
