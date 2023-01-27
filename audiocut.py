@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import click
 import random
 import shutil
