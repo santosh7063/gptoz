@@ -10,7 +10,7 @@ from moviepy.editor import (
 )
 
 
-def get_timecodes(soundfile, beat):
+def get_beat_timecodes(soundfile, beat):
     aubiocut = shutil.which('aubiocut')
     if beat:
         aubiocut_command = (aubiocut, '-b', soundfile)
@@ -19,7 +19,29 @@ def get_timecodes(soundfile, beat):
 
     process = subprocess.Popen(aubiocut_command, stdout=subprocess.PIPE)
     (out, _) = process.communicate()
-    return [float(n) for n in out.split(b'\n') if n]
+    return [float(n) for n in out.splitlines() if n]
+
+
+def get_notes(soundfile):
+    aubionotes = shutil.which('aubionotes')
+    aubionotes_command = (aubionotes, soundfile)
+    process = subprocess.Popen(aubionotes_command, stdout=subprocess.PIPE)
+    (out, _) = process.communicate()
+    lines = [float(n) for n in out.split(b'\n') if n]
+
+def slice_video(clip, ts):
+    t0 = 0
+    clips = []
+    r = random.random()
+    for t in ts:
+        if random.random() > 0.666:
+            r = random.random()
+
+        delta = t - t0
+        t0 = r * (clip.duration - delta)
+        clips.append(clip.subclip(t0, t0 + delta))
+        t0 = t
+    return clips
 
 
 @click.command
@@ -28,20 +50,11 @@ def get_timecodes(soundfile, beat):
 @click.option('-o', '--outfile', default='output.mp4')
 @click.option('-b', '--beat', is_flag=True)
 def main(videofile, soundfile, outfile, beat):
-    timecodes = get_timecodes(soundfile, beat)
+    timecodes = get_beat_timecodes(soundfile, beat)
 
-    clips = []
-    t0 = 0
-    r = random.random()
     with VideoFileClip(videofile) as clip:
-        for t in timecodes:
-            if random.random() > 0.666:
-                r = random.random()
-
-            delta = t - t0
-            t0 = r * (clip.duration - delta)
-            clips.append(clip.subclip(t0, t0 + delta))
-            t0 = t
+        with click.progressbar(timecodes) as ts:
+            clips = slice_video(clip, ts)
 
         final_clip = concatenate_videoclips(clips)
         with AudioFileClip(soundfile) as audioclip:
