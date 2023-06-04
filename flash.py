@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
-from __future__ import print_function, division
-import sys
+import typing as t
+import click
 import math
 import random
 from numpy import dot
@@ -19,8 +18,7 @@ def angle_between(v1, v2):
         return math.pi
 
 
-class Point(object):
-
+class Point:
     def __init__(self, x=0.0, y=0.0):
         self._point = (x, y)
 
@@ -60,7 +58,8 @@ class Point(object):
         return Vector(self, other).length < r
 
 
-class Vector(object):
+class Vector:
+    _vector: t.Tuple[Point, Point]
 
     def __init__(self, a: Point, b: Point):
         if not isinstance(a, Point):
@@ -98,11 +97,11 @@ class Vector(object):
 
     @a.setter
     def a(self, value: Point):
-        self._vector[0] = value
+        self._vector = (value, self._vector[1])
 
     @b.setter
     def b(self, value: Point):
-        self._vector[1] = value
+        self._vector = (self._vector[0], value)
 
     @property
     def ab(self):
@@ -128,7 +127,8 @@ class Vector(object):
         return self.ab[0] * v.ab[0] + self.ab[1] * v.ab[1]
 
 
-class Flash(object):
+class Flash:
+    __alternate = 0
 
     def __init__(self, width=500, height=500, start=None, end=None):
         self.width = width
@@ -161,7 +161,11 @@ class Flash(object):
             current.y + random.randint(1, y) - y // 2
         )
 
-    def random_walk(self, length=random.randint(1, 10), data=0.0, mix=0.0):
+    def alternate(self, a, b):
+        self.__alternate = 1 if self.__alternate == 0 else 0
+        return a if self.__alternate == 0 else b
+
+    def random_walk(self, length=None, data=0.0, mix=0.0, alternate=False):
         """
         Create a segment in a zig-zag path towards the end point
         :param number:
@@ -178,7 +182,11 @@ class Flash(object):
                 return self.random_point(10, 10)
 
             deflect = random.random() * (1. - mix) + data * mix
-            factor = random.randint(-1, 1)
+
+            factor = self.alternate(0, random.randint(-1, 1)) \
+                     if alternate \
+                     else random.randint(-1, 1)
+
             if factor == 0:
                 # why is it off?
                 new_angle = math.pi / 2 - Vector(b, self.end).phi + (deflect - 0.5)
@@ -189,6 +197,7 @@ class Flash(object):
             nv = Vector.from_polar(b, new_angle, length)
             return b.translate(*nv.ab)
 
+        length = length or random.randint(1, 10)
         node = next_node(length)
         retry = 10
         while not node.within_limits(self. width, self.height):
@@ -274,23 +283,26 @@ class Flash(object):
         return drawing
 
 
-if __name__ == '__main__':
-    try:
-        nodes = int(sys.argv[1])
-    except (ValueError, IndexError):
-        nodes = 23
-
-    flash = Flash()
+@click.command()
+@click.option('-n', '--nodes', help='number of nodes', type=int, default=23)
+@click.option('-w', '--width', type=int, default=500)
+@click.option('-h', '--height', type=int, default=500)
+def main(nodes, width, height):
+    flash = Flash(width=width, height=height)
     flashes = [flash]
-    current = 0
+    path = '/tmp/flash.svg'
     for _ in range(nodes):
         if flash.current_point().within_perimeter(flash.end, 10):
             flash = Flash()
             flashes.append(flash)
-            current += 1
         flash.random_walk()
 
-    drawing = Drawing(500, 500, origin=(0, 0))
+    drawing = Drawing(width, height, origin=(0, 0))
     for flash in flashes:
         drawing.append(flash.render_path())
-    drawing.saveSvg('/tmp/flash.svg')
+    drawing.saveSvg(path)
+    click.echo(f'saved to {path}')
+
+
+if __name__ == '__main__':
+    main()
