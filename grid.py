@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import print_function, division
 from sys import stdout
 import argparse
 import os
@@ -9,7 +7,7 @@ import random
 from lib import progress
 
 
-class Grid(object):
+class Grid:
 
     def __init__(self, width=20, height=20):
         self.width = width
@@ -76,6 +74,15 @@ class Grid(object):
         else:
             return 0
 
+    def gul(self, x, y, cell):
+        neighbours = self.get_neighbours(x, y)
+        s = sum(neighbours)
+        if s % 2 == 0:
+            return 0
+        else:
+            return 1
+
+
     def step(self, rules='gol'):
         grid = []
         for y, row in enumerate(self._grid):
@@ -86,7 +93,9 @@ class Grid(object):
 
 
 if __name__ == '__main__':
-
+    """
+    Run a game of life
+    """
     ap = argparse.ArgumentParser('Cellular Automata Playground')
     ap.add_argument(
         '-i', '--iterations', dest='iterations', type=int, action='store',
@@ -121,10 +130,15 @@ if __name__ == '__main__':
 
     if args.image:
         image = cv2.imread(args.image, cv2.IMREAD_GRAYSCALE)
+        _, image = cv2.threshold(image, 127, 255, cv2.THRESH_BINARY)
+        cv2.imshow('image window', image)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
         gol.from_bitmap(image)
     else:
         gol.randomize()
 
+    print(f'writing {args.iterations} frames to {args.outdir}')
     for i in range(args.iterations):
         cv2.imwrite(
             os.path.join(args.outdir, '{:05d}.png'.format(i)),
