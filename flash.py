@@ -10,11 +10,9 @@ def angle_between(v1, v2):
     u = v1.normal_form
     v = v2.normal_form
     try:
-        return math.acos(
-            dot(u, v) / dot(v1.length, v2.length)
-        )
+        return math.acos(dot(u, v) / dot(v1.length, v2.length))
     except ValueError:
-        print('value error: {0!r} {1!r}'.format(u, v))
+        print("value error: {0!r} {1!r}".format(u, v))
         return math.pi
 
 
@@ -23,7 +21,7 @@ class Point:
         self._point = (x, y)
 
     def __repr__(self):
-        return '<{0}, {1}>'.format(self.x, self.y)
+        return "<{0}, {1}>".format(self.x, self.y)
 
     @property
     def x(self):
@@ -42,17 +40,10 @@ class Point:
         self._point[1] = value
 
     def translate(self, x, y):
-        return Point(
-            self.x + x,
-            self.y + y
-        )
+        return Point(self.x + x, self.y + y)
 
     def within_limits(self, x, y):
-        return (
-            self.x >= 0 and self.x <= x
-            and
-            self.y >= 0 and self.y <= y
-        )
+        return self.x >= 0 and self.x <= x and self.y >= 0 and self.y <= y
 
     def within_perimeter(self, other, r):
         return Vector(self, other).length < r
@@ -63,14 +54,14 @@ class Vector:
 
     def __init__(self, a: Point, b: Point):
         if not isinstance(a, Point):
-            raise TypeError('a must be Point')
+            raise TypeError("a must be Point")
         elif not isinstance(b, Point):
-            raise TypeError('b must be Point')
+            raise TypeError("b must be Point")
         else:
             self._vector = (a, b)
 
     def __repr__(self):
-        return '<Vector {0!r}, {1!r}>'.format(self.a, self.b)
+        return "<Vector {0!r}, {1!r}>".format(self.a, self.b)
 
     @staticmethod
     def from_polar(start, phi, length):
@@ -135,14 +126,14 @@ class Flash:
         self.height = height
         self.start = start or Point(width // 2, height)
         self.end = end or Point(width // 2, 0)
-        self._nodes = []
+        self._nodes: List[Point] = []
         self._nodes.append(self.start)
 
     def __str__(self):
-        return ' → '.join(map(str, self._nodes))
+        return " → ".join(map(str, self._nodes))
 
     def __repr__(self):
-        return '<Flash {}>'.format(id(self))
+        return "<Flash {}>".format(id(self))
 
     def __len__(self):
         return len(self._nodes)
@@ -151,6 +142,10 @@ class Flash:
     def current_node(self):
         return self._nodes[-1:][0]
 
+    @property
+    def random_node(self):
+        return self._nodes[random.randint(0, len(self._nodes) - 1)]
+
     def current_point(self):
         return self.points[-1:][0]
 
@@ -158,7 +153,7 @@ class Flash:
         current = self.current_point()
         return Point(
             current.x + random.randint(1, x) - x // 2,
-            current.y + random.randint(1, y) - y // 2
+            current.y + random.randint(1, y) - y // 2,
         )
 
     def alternate(self, a, b):
@@ -175,22 +170,25 @@ class Flash:
         :param float:
             range 0..1 how to mix fixed with random value
         """
+
         def next_node(length):
             try:
                 a, b = self.points[-2:]
             except ValueError:
                 return self.random_point(10, 10)
 
-            deflect = random.random() * (1. - mix) + data * mix
+            deflect = random.random() * (1.0 - mix) + data * mix
 
-            factor = self.alternate(0, random.randint(-1, 1)) \
-                     if alternate \
-                     else random.randint(-1, 1)
+            factor = (
+                self.alternate(0, random.randint(-1, 1))
+                if alternate
+                else random.randint(-1, 1)
+            )
 
             if factor == 0:
                 # why is it off?
                 new_angle = math.pi / 2 - Vector(b, self.end).phi + (deflect - 0.5)
-                length = length ** 2
+                length = length**2
             else:
                 new_angle = math.pi / 2 - factor * deflect * math.pi / 2
 
@@ -200,7 +198,7 @@ class Flash:
         length = length or random.randint(1, 10)
         node = next_node(length)
         retry = 10
-        while not node.within_limits(self. width, self.height):
+        while not node.within_limits(self.width, self.height):
             node = next_node(length)
             retry -= 1
             # safety catch against infinite looping
@@ -224,19 +222,16 @@ class Flash:
 
     @property
     def edges(self):
-        return [
-            Vector(self.points[i], p)
-            for i, p in enumerate(self.points[1:])
-        ]
+        return [Vector(self.points[i], p) for i, p in enumerate(self.points[1:])]
 
     @property
     def path(self):
         path = Path(
             stroke_width=1,
-            stroke='black',
-            fill='black',
+            stroke="black",
+            fill="black",
             fill_opacity=0.0,
-            stroke_miterlimit=25 # keep it pointy
+            stroke_miterlimit=25,  # keep it pointy
         )
         path.M(self.start.x, self.start.y)
         for node in self.points[1:]:
@@ -250,10 +245,10 @@ class Flash:
         """
         path = Path(
             stroke_width=1,
-            stroke='black',
-            fill='black',
+            stroke="black",
+            fill="black",
             fill_opacity=1.0,
-            stroke_miterlimit=99 # keep it pointy
+            stroke_miterlimit=99,  # keep it pointy
         )
         path.M(self.start.x, self.start.y)
 
@@ -283,26 +278,38 @@ class Flash:
         return drawing
 
 
+def random_point(max_x: int, max_y: int) -> Point:
+    return Point(int(random.random() * max_x), int(random.random() * max_y))
+
+
 @click.command()
-@click.option('-n', '--nodes', help='number of nodes', type=int, default=23)
-@click.option('-w', '--width', type=int, default=500)
-@click.option('-h', '--height', type=int, default=500)
-def main(nodes, width, height):
+@click.option("-n", "--nodes", help="number of nodes", type=int, default=23)
+@click.option("-w", "--width", type=int, default=500)
+@click.option("-h", "--height", type=int, default=500)
+@click.option("-o", "--outfile", default="/tmp/flash.svg")
+@click.option("-v", "--verbose", is_flag=True)
+def main(nodes, width, height, outfile, verbose):
     flash = Flash(width=width, height=height)
+    first_flash = flash
     flashes = [flash]
-    path = '/tmp/flash.svg'
     for _ in range(nodes):
-        if flash.current_point().within_perimeter(flash.end, 10):
-            flash = Flash()
+        if flash.current_point().within_perimeter(flash.end, width / 10):
+            flash = Flash(
+                width=width, height=height,
+                start=first_flash.random_node, end=random_point(width, height / 2)
+            )
+            if verbose:
+                click.echo(f"new flash started {flash}")
+
             flashes.append(flash)
         flash.random_walk()
 
     drawing = Drawing(width, height, origin=(0, 0))
     for flash in flashes:
         drawing.append(flash.render_path())
-    drawing.saveSvg(path)
-    click.echo(f'saved to {path}')
+    drawing.saveSvg(outfile)
+    click.echo(f"saved to {outfile}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

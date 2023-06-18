@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import os
 from sys import stdout
 import argparse
@@ -66,6 +67,7 @@ if __name__ == '__main__':
         else:
             if meta.channels > 1:
                 b = b.T[0]
+
             drawing = render_frame(
                 drawing,
                 b,
