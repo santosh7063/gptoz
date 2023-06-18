@@ -12,13 +12,20 @@ def get_commandline_program(name):
 
     return program
 
-def aubiocommand(command: t.Sequence[str], parser=float):
+
+def aubiocommand(command: t.Sequence[str], parser: t.Callable = float):
+    """
+    Run the command, parse and return its output
+    """
     process = subprocess.Popen(command, stdout=subprocess.PIPE)
     (out, _) = process.communicate()
     return [parser(n) for n in out.splitlines() if n]
 
 
 def get_beat(soundfile: str, beat: bool) -> t.Sequence[float]:
+    """
+    Get the beat structure using aubiocut
+    """
     args: t.Tuple[str, ...]
     aubiocut = get_commandline_program('aubiocut')
 
@@ -31,7 +38,7 @@ def get_beat(soundfile: str, beat: bool) -> t.Sequence[float]:
 
 def get_notes(soundfile: str):
     """
-    aubionotes
+    Get the list of midi notes using aubionotes
     """
     aubionotes = get_commandline_program('aubionotes')
     if aubionotes is None:
@@ -40,9 +47,9 @@ def get_notes(soundfile: str):
     return aubiocommand((aubionotes, soundfile))
 
 
-def get_pitch(soundfile: str, parser):
+def get_pitch(soundfile: str, parser: t.Callable):
     """
-    run aubiopitch on soundfile
+    Get the list of pitch changes using aubiopitch
     """
     aubiopitch = get_commandline_program('aubiopitch')
     return aubiocommand((aubiopitch, soundfile), parser)
