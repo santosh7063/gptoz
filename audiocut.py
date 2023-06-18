@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 from typing import Tuple, List, Sequence
 from dataclasses import dataclass
 import click
@@ -9,6 +10,10 @@ from moviepy.editor import (
     concatenate_videoclips
 )  # type: ignore
 from aubiowrap import get_beat, get_pitch
+
+
+Seconds = float
+Frequency = float
 
 
 @dataclass
@@ -22,8 +27,8 @@ class Config:
 class Timeline:
     fps: float = 25
     config: Config
-    beats: Sequence[float]
-    pitches: List[Tuple[float, float]]
+    beats: Sequence[Seconds]
+    pitches: List[Tuple[Seconds, Frequency]]
     clips: List[VideoFileClip]
     slices: List[VideoFileClip]
     audio: AudioFileClip
@@ -37,7 +42,11 @@ class Timeline:
     def add_clip(self, clip: VideoFileClip):
         self.clips.append(clip)
 
-    def lookup_pitch(self, time: float, tolerance: float = 0.1) -> Tuple[float, float]:
+    def lookup_pitch(
+        self,
+        time: Seconds,
+        tolerance: Seconds = 0.1
+    ) -> Tuple[Seconds, Frequency]:
         last = 0.
         t = 0.
         for (t, v) in self.pitches:
@@ -50,43 +59,48 @@ class Timeline:
                 return (t, last)
         return (t, last)
 
-    def transient_ahead(
+    def on_transient(
         self,
         time: float,
-        time_delta: float = 0.1,
+        time_delta: float = 0.25,
         frequency_delta: float = 4.
     ) -> bool:
-        (t1, a) = self.lookup_pitch(time, tolerance=0.01)
-        (t2, b) = self.lookup_pitch(time + time_delta, tolerance=0.01)
+        (t1, a) = self.lookup_pitch(time - time_delta, tolerance=0.01)
+        (t2, b) = self.lookup_pitch(time, tolerance=0.01)
         return abs(a - b) < frequency_delta
 
     def get_slice_times(
         self,
-        clip: VideoFileClip,
+        start: float,
+        duration: float,
         tm1: float,
         t: float
     ) -> Tuple[float, float]:
-        r = random.random()
         delta = t - tm1
-        start = r * (clip.duration - delta)
+        if self.re_trigger(t) or start + delta > duration:
+            r = random.random()
+            start = r * (duration - delta)
         end = start + delta
         return (start, end)
 
     def re_trigger(self, t) -> bool:
         if random.random() > self.config.randomize:
-            return self.transient_ahead(t)
+            return self.on_transient(t)
         else:
             return random.random() < self.config.probability
 
     def slice_clips(self):
+        """
+        Slice according to the beat structure
+        """
         label = 'Slicing video to the beat'
         with click.progressbar(self.beats, label=label) as beats:
             clip = self.clips[0]
             tm1 = 0.
+            start = 0.
             for time in beats:
-                if self.re_trigger(time):
-                    start, end = self.get_slice_times(clip, tm1, time)
-                    self.slices.append(clip.subclip(start, end))
+                start, end = self.get_slice_times(start, clip.duration, tm1, time)
+                self.slices.append(clip.subclip(start, end))
                 tm1 = time
 
     def combine_slices(self):
@@ -129,6 +143,9 @@ def main(
     probability: float,
     with_audio: bool,
 ):
+    """
+    Slice a video clip to the beat of a given soundtrack.
+    """
     config = Config(
         soundfile=soundfile,
         outfile=outfile,
