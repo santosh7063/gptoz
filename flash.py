@@ -60,11 +60,11 @@ class Vector:
         else:
             self._vector = (a, b)
 
-    def __repr__(self):
-        return "<Vector {0!r}, {1!r}>".format(self.a, self.b)
+    def __repr__(self) -> str:
+        return f"<Vector {self.a}, {self.b}>"
 
     @staticmethod
-    def from_polar(start, phi, length):
+    def from_polar(start, phi, length) -> "Vector":
         end = Point(
             start.x + length * math.cos(phi),
             start.y + length * math.sin(phi),
@@ -72,18 +72,18 @@ class Vector:
         return Vector(start, end)
 
     @property
-    def normal_form(self):
+    def normal_form(self) -> t.Tuple:
         """
         B - A, assume 0, 0 origin
         """
         return (self.a.x - self.b.x, self.a.y - self.b.y)
 
     @property
-    def a(self):
+    def a(self) -> Point:
         return self._vector[0]
 
     @property
-    def b(self):
+    def b(self) -> Point:
         return self._vector[1]
 
     @a.setter
@@ -126,7 +126,7 @@ class Flash:
         self.height = height
         self.start = start or Point(width // 2, height)
         self.end = end or Point(width // 2, 0)
-        self._nodes: List[Point] = []
+        self._nodes: t.List[Point] = []
         self._nodes.append(self.start)
 
     def __str__(self):
@@ -282,18 +282,12 @@ def random_point(max_x: int, max_y: int) -> Point:
     return Point(int(random.random() * max_x), int(random.random() * max_y))
 
 
-@click.command()
-@click.option("-n", "--nodes", help="number of nodes", type=int, default=23)
-@click.option("-w", "--width", type=int, default=500)
-@click.option("-h", "--height", type=int, default=500)
-@click.option("-o", "--outfile", default="/tmp/flash.svg")
-@click.option("-v", "--verbose", is_flag=True)
-def main(nodes, width, height, outfile, verbose):
+def make_flash(width, height, nodes, verbose):
     flash = Flash(width=width, height=height)
     first_flash = flash
     flashes = [flash]
     for _ in range(nodes):
-        if flash.current_point().within_perimeter(flash.end, width / 10):
+        if flash.current_point().within_perimeter(flash.end, height / 20):
             flash = Flash(
                 width=width, height=height,
                 start=first_flash.random_node, end=random_point(width, height / 2)
@@ -303,10 +297,26 @@ def main(nodes, width, height, outfile, verbose):
 
             flashes.append(flash)
         flash.random_walk()
+    return flashes
 
+
+@click.command()
+@click.option("-n", "--nodes", help="number of nodes", type=int, default=23)
+@click.option("-w", "--width", type=int, default=500)
+@click.option("-h", "--height", type=int, default=500)
+@click.option("-o", "--outfile", default="/tmp/flash.svg")
+@click.option("-v", "--verbose", is_flag=True)
+def main(nodes, width, height, outfile, verbose):
     drawing = Drawing(width, height, origin=(0, 0))
+    flashes = make_flash(
+        width=width,
+        height=height,
+        nodes=nodes,
+        verbose=verbose
+    )
     for flash in flashes:
         drawing.append(flash.render_path())
+
     drawing.saveSvg(outfile)
     click.echo(f"saved to {outfile}")
 
