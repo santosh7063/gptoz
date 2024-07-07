@@ -3,7 +3,6 @@ Vizzy
 
 A pack of scripts to help with (non-realtime) visualization of audio.
 
-
 Installation
 ============
 

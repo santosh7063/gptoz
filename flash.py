@@ -82,13 +82,13 @@ class Vector:
     def a(self) -> Point:
         return self._vector[0]
 
-    @property
-    def b(self) -> Point:
-        return self._vector[1]
-
     @a.setter
     def a(self, value: Point):
         self._vector = (value, self._vector[1])
+
+    @property
+    def b(self) -> Point:
+        return self._vector[1]
 
     @b.setter
     def b(self, value: Point):
@@ -289,8 +289,10 @@ def make_flash(width, height, nodes, verbose):
     for _ in range(nodes):
         if flash.current_point().within_perimeter(flash.end, height / 20):
             flash = Flash(
-                width=width, height=height,
-                start=first_flash.random_node, end=random_point(width, height / 2)
+                width=width,
+                height=height,
+                start=first_flash.random_node,
+                end=random_point(width, height / 2),
             )
             if verbose:
                 click.echo(f"new flash started {flash}")
@@ -308,12 +310,7 @@ def make_flash(width, height, nodes, verbose):
 @click.option("-v", "--verbose", is_flag=True)
 def main(nodes, width, height, outfile, verbose):
     drawing = Drawing(width, height, origin=(0, 0))
-    flashes = make_flash(
-        width=width,
-        height=height,
-        nodes=nodes,
-        verbose=verbose
-    )
+    flashes = make_flash(width=width, height=height, nodes=nodes, verbose=verbose)
     for flash in flashes:
         drawing.append(flash.render_path())
 

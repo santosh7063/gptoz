@@ -1,4 +1,4 @@
-#/usr/bin/env python3
+# /usr/bin/env python3
 from sys import stdout
 import argparse
 import os
@@ -15,33 +15,22 @@ class Glider(object):
         self.height = height
         self.length = length
         self.speed = speed
-        self.x = random.randint(0, width-1) if x is None else x
-        self.y = random.randint(0, width-1) if y is None else y
+        self.x = random.randint(0, width - 1) if x is None else x
+        self.y = random.randint(0, width - 1) if y is None else y
         self.direction = self.direction_vector(random.randint(0, 3))
         self.trail = []
 
     def direction_vector(self, index):
-        return (
-            (1, 0),
-            (0, 1),
-            (-1, 0),
-            (0, -1)
-        )[index]
+        return ((1, 0), (0, 1), (-1, 0), (0, -1))[index]
 
     def turn_left(self):
-        self.direction = (
-            -self.direction[1],
-            self.direction[0]
-        )
+        self.direction = (-self.direction[1], self.direction[0])
 
     def turn_right(self):
-        self.direction = (
-            self.direction[1],
-            -self.direction[0]
-        )
+        self.direction = (self.direction[1], -self.direction[0])
 
     def move(self):
-        self.trail = ([(self.x, self.y)] + self.trail)[:self.length]
+        self.trail = ([(self.x, self.y)] + self.trail)[: self.length]
         self.x = (self.x + self.speed * self.direction[0]) % self.width
         self.y = (self.y + self.speed * self.direction[1]) % self.height
 
@@ -61,9 +50,11 @@ class GliderFlock(Grid):
                 self.width,
                 self.height,
                 length=length,
-                x=0, y=(i - size // 2) + self.height // 2,
-                speed=speed or random.randint(1, 5)
-            ) for i in range(size)
+                x=0,
+                y=(i - size // 2) + self.height // 2,
+                speed=speed or random.randint(1, 5),
+            )
+            for i in range(size)
         ]
 
     def step(self):
@@ -83,40 +74,68 @@ class GliderFlock(Grid):
         self._grid = grid
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
-    ap = argparse.ArgumentParser('Travelling Signal Line')
+    ap = argparse.ArgumentParser("Travelling Signal Line")
     ap.add_argument(
-        '-i', '--iterations', dest='iterations', type=int, action='store',
+        "-i",
+        "--iterations",
+        dest="iterations",
+        type=int,
+        action="store",
         default=99,
     )
     ap.add_argument(
-        '-o', '--outdir', dest='outdir', action='store', default='/tmp',
-        help='output dir'
+        "-o",
+        "--outdir",
+        dest="outdir",
+        action="store",
+        default="/tmp",
+        help="output dir",
     )
     ap.add_argument(
-        '-W', '--width', dest='width', type=int, action='store',
+        "-W",
+        "--width",
+        dest="width",
+        type=int,
+        action="store",
         default=100,
-        help='width'
+        help="width",
     )
     ap.add_argument(
-        '-H', '--height', dest='height', type=int, action='store',
+        "-H",
+        "--height",
+        dest="height",
+        type=int,
+        action="store",
         default=100,
-        help='height'
+        help="height",
     )
     ap.add_argument(
-        '-l', '--length', dest='length', type=int,  action='store',
+        "-l",
+        "--length",
+        dest="length",
+        type=int,
+        action="store",
         default=10,
-        help='glider length'
+        help="glider length",
     )
     ap.add_argument(
-        '-s', '--size', dest='size', type=int,  action='store',
+        "-s",
+        "--size",
+        dest="size",
+        type=int,
+        action="store",
         default=50,
-        help='flocksize'
+        help="flocksize",
     )
     ap.add_argument(
-        '-S', '--speed', dest='speed', type=int,  action='store',
-        help='glider speed. if not specified, speed is randomized 1..5'
+        "-S",
+        "--speed",
+        dest="speed",
+        type=int,
+        action="store",
+        help="glider speed. if not specified, speed is randomized 1..5",
     )
     args = ap.parse_args()
 
@@ -131,9 +150,8 @@ if __name__ == '__main__':
     for i in range(args.iterations):
         flock.step()
         cv2.imwrite(
-            os.path.join(args.outdir, '{:05d}.png'.format(i)),
-            flock.array * 255
+            os.path.join(args.outdir, "{:05d}.png".format(i)), flock.array * 255
         )
         progress(i, args.iterations)
 
-    stdout.write('\n')
+    stdout.write("\n")

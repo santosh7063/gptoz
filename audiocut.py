@@ -7,7 +7,7 @@ import random
 from moviepy.editor import (
     AudioFileClip,
     VideoFileClip,
-    concatenate_videoclips
+    concatenate_videoclips,
 )  # type: ignore
 from aubiowrap import get_beat, get_pitch
 
@@ -43,13 +43,11 @@ class Timeline:
         self.clips.append(clip)
 
     def lookup_pitch(
-        self,
-        time: Seconds,
-        tolerance: Seconds = 0.1
+        self, time: Seconds, tolerance: Seconds = 0.1
     ) -> Tuple[Seconds, Frequency]:
-        last = 0.
-        t = 0.
-        for (t, v) in self.pitches:
+        last = 0.0
+        t = 0.0
+        for t, v in self.pitches:
             if t < time:
                 last = v
                 continue
@@ -60,21 +58,14 @@ class Timeline:
         return (t, last)
 
     def on_transient(
-        self,
-        time: float,
-        time_delta: float = 0.25,
-        frequency_delta: float = 4.
+        self, time: float, time_delta: float = 0.25, frequency_delta: float = 4.0
     ) -> bool:
         (t1, a) = self.lookup_pitch(time - time_delta, tolerance=0.01)
         (t2, b) = self.lookup_pitch(time, tolerance=0.01)
         return abs(a - b) < frequency_delta
 
     def get_slice_times(
-        self,
-        start: float,
-        duration: float,
-        tm1: float,
-        t: float
+        self, start: float, duration: float, tm1: float, t: float
     ) -> Tuple[float, float]:
         delta = t - tm1
         if self.re_trigger(t) or start + delta > duration:
@@ -93,11 +84,11 @@ class Timeline:
         """
         Slice according to the beat structure
         """
-        label = 'Slicing video to the beat'
+        label = "Slicing video to the beat"
         with click.progressbar(self.beats, label=label) as beats:
             clip = self.clips[0]
-            tm1 = 0.
-            start = 0.
+            tm1 = 0.0
+            start = 0.0
             for time in beats:
                 start, end = self.get_slice_times(start, clip.duration, tm1, time)
                 self.slices.append(clip.subclip(start, end))
@@ -120,19 +111,31 @@ def is_close(a: float, b: float, tolerance: float = 0.1):
 
 
 def pitch_parser(line) -> Tuple[float, float]:
-    time, pitch = line.split(b' ')
+    time, pitch = line.split(b" ")
     return (float(time), float(pitch))
 
 
 @click.command()
-@click.argument('videofile')
-@click.option('-s', '--soundfile')
-@click.option('-o', '--outfile', default='output.mp4')
-@click.option('-f', '--fps', default=25, type=float)
-@click.option('-b', '--beat', is_flag=True, help="the -b parameter to aubiocut")
-@click.option('-r', '--randomize', default=0.5, type=float, help="distribution of determinism to randomness")
-@click.option('-p', '--probability', default=0.618, type=float, help="probability of a random event")
-@click.option('--with-audio', is_flag=True)
+@click.argument("videofile")
+@click.option("-s", "--soundfile")
+@click.option("-o", "--outfile", default="output.mp4")
+@click.option("-f", "--fps", default=25, type=float)
+@click.option("-b", "--beat", is_flag=True, help="the -b parameter to aubiocut")
+@click.option(
+    "-r",
+    "--randomize",
+    default=0.5,
+    type=float,
+    help="distribution of determinism to randomness",
+)
+@click.option(
+    "-p",
+    "--probability",
+    default=0.618,
+    type=float,
+    help="probability of a random event",
+)
+@click.option("--with-audio", is_flag=True)
 def main(
     videofile: str,
     soundfile: str,
@@ -150,7 +153,7 @@ def main(
         soundfile=soundfile,
         outfile=outfile,
         randomize=randomize,
-        probability=probability
+        probability=probability,
     )
     timeline = Timeline(fps=fps, config=config)
     timeline.pitches = get_pitch(soundfile, pitch_parser)
@@ -166,5 +169,5 @@ def main(
             timeline.save()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

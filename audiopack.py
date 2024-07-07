@@ -3,18 +3,20 @@ from collections import namedtuple
 from scipy.io import wavfile
 from scipy.fftpack import rfft
 import numpy as np
+
 """
 An audio-visualizing toolbox
 """
 
- ##     ##     ##      ##     ##     ##     ##     ##     ##
+
+##     ##     ##      ##     ##     ##     ##     ##     ##
 #  #  ##  #  ##  #  ##   #  ##  #  ##  #  ##  #  ##  #  ##  #  #
 #   ##     ##     ##      ##     ##     ##     ##     ##     ##
 ##
 ### Audio data functions
 ##
 #
-def pcm2float(sig, dtype='float64'):
+def pcm2float(sig, dtype="float64"):
     """Convert PCM signal to floating point with a range from -1 to 1.
     Use dtype='float32' for single precision.
     Parameters
@@ -32,10 +34,10 @@ def pcm2float(sig, dtype='float64'):
     float2pcm, dtype
     """
     sig = np.asarray(sig)
-    if sig.dtype.kind not in 'iu':
+    if sig.dtype.kind not in "iu":
         raise TypeError("'sig' must be an array of integers")
     dtype = np.dtype(dtype)
-    if dtype.kind != 'f':
+    if dtype.kind != "f":
         raise TypeError("'dtype' must be a floating point type")
 
     i = np.iinfo(sig.dtype)
@@ -46,11 +48,11 @@ def pcm2float(sig, dtype='float64'):
 
 def loadwav(filename):
     rate, raw = wavfile.read(filename)
-    data = pcm2float(raw, 'float64')
-    meta = namedtuple('meta', ['rate', 'samples', 'seconds', 'channels'])
+    data = pcm2float(raw, "float64")
+    meta = namedtuple("meta", ["rate", "samples", "seconds", "channels"])
     meta.samples = len(data)
     meta.seconds = float(meta.samples) / float(rate)
-    meta.rate    = rate
+    meta.rate = rate
     try:
         meta.channels = data.shape[1]
     except IndexError:
@@ -61,20 +63,20 @@ def loadwav(filename):
 def audio_chunks(data, blocksize) -> Iterator:
     """Yield successive n-sized chunks from l."""
     for i in range(0, len(data), blocksize):
-        block = data[i:i+blocksize]
+        block = data[i : i + blocksize]
         if len(block) < blocksize:
-            yield np.lib.pad(block, (0, blocksize-len(block)), 'constant')
+            yield np.lib.pad(block, (0, blocksize - len(block)), "constant")
         yield block
 
 
 def spectrum(block, N, bins=None):
-    s = 2.0/N * np.abs(rfft(block))
+    s = 2.0 / N * np.abs(rfft(block))
     if bins is None:
         return s
     else:
-        rel = len(s)//bins
-        return [sum(s[i*rel: (i+1)*rel]) for i in range(bins)]
+        rel = len(s) // bins
+        return [sum(s[i * rel : (i + 1) * rel]) for i in range(bins)]
 
 
 def rms(block):
-    return np.sqrt(np.sum(np.apply_along_axis(lambda x: x*x, 0, block)) / len(block))
+    return np.sqrt(np.sum(np.apply_along_axis(lambda x: x * x, 0, block)) / len(block))

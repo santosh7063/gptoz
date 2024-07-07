@@ -58,36 +58,36 @@ def blob(image, data: Tuple[List, List], opts: Opts):
     return image
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        description='Parse audiofile to dancing blob'
-    )
-    parser.add_argument('soundfile', metavar='soundfile', type=str,
-        help='soundfile'
-    )
-    parser.add_argument('-a', '--amplify', action='store', type=float,
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Parse audiofile to dancing blob")
+    parser.add_argument("soundfile", metavar="soundfile", type=str, help="soundfile")
+    parser.add_argument(
+        "-a",
+        "--amplify",
+        action="store",
+        type=float,
         default=1.0,
-        help='amplify audio frames'
+        help="amplify audio frames",
     )
-    parser.add_argument('-o', '--outdir', action='store',
-        default='/tmp/',
-        help='output directory'
+    parser.add_argument(
+        "-o", "--outdir", action="store", default="/tmp/", help="output directory"
     )
-    parser.add_argument('-W', '--width', type=int, action='store',
-        default=1280,
-        help='width'
+    parser.add_argument(
+        "-W", "--width", type=int, action="store", default=1280, help="width"
     )
-    parser.add_argument('-H', '--height', type=int, action='store',
-        default=720,
-        help='height'
+    parser.add_argument(
+        "-H", "--height", type=int, action="store", default=720, help="height"
     )
-    parser.add_argument('-f', '--fps', type=int, action='store',
-        default=25,
-        help='frames per second'
+    parser.add_argument(
+        "-f", "--fps", type=int, action="store", default=25, help="frames per second"
     )
-    parser.add_argument('-r', '--radius', type=int, action='store',
+    parser.add_argument(
+        "-r",
+        "--radius",
+        type=int,
+        action="store",
         default=1000,
-        help='base radius of the circles'
+        help="base radius of the circles",
     )
     args = parser.parse_args()
 
@@ -96,11 +96,11 @@ if __name__ == '__main__':
     data = data * args.amplify
 
     blocksize: int = meta.rate // args.fps
-    blocks: int    = meta.samples // blocksize
+    blocks: int = meta.samples // blocksize
 
     opts = Opts(radius=args.radius)
 
-    with open(path.join(args.outdir, 'params.json'), 'w') as f:
+    with open(path.join(args.outdir, "params.json"), "w") as f:
         json.dump(args.__dict__, f)
 
     for n, block in enumerate(audio_chunks(data, blocksize)):
@@ -112,7 +112,7 @@ if __name__ == '__main__':
             block_channels = np.array_split(data, 2)
 
         image = blob(bitmap, block_channels, opts)
-        cv2.imwrite(path.join(args.outdir, f'{padded}.png'), image)
+        cv2.imwrite(path.join(args.outdir, f"{padded}.png"), image)
 
         percent_finished = int(n / blocks * 100)
-        print(f'{percent_finished:>3}%', end='\r', flush=True)
+        print(f"{percent_finished:>3}%", end="\r", flush=True)

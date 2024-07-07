@@ -21,10 +21,7 @@ class Grid:
         ]
 
     def clear(self):
-        self._grid = [
-            [0 for cell in range(self.width)]
-            for line in range(self.height)
-        ]
+        self._grid = [[0 for cell in range(self.width)] for line in range(self.height)]
 
     def glider(self):
         self.set_cell(0, 1, 1)
@@ -58,10 +55,12 @@ class Grid:
         for i in (-1, 0, 1):
             for j in (-1, 0, 1):
                 if not (i == 0 and j == 0):
-                    ns.append(self.get_cell(
-                        (x + i) % self.width,
-                        (y + j) % self.height,
-                    ))
+                    ns.append(
+                        self.get_cell(
+                            (x + i) % self.width,
+                            (y + j) % self.height,
+                        )
+                    )
         return ns
 
     def gol(self, x, y, cell):
@@ -82,8 +81,7 @@ class Grid:
         else:
             return 1
 
-
-    def step(self, rules='gol'):
+    def step(self, rules="gol"):
         grid = []
         for y, row in enumerate(self._grid):
             grid.append(row.copy())
@@ -92,37 +90,55 @@ class Grid:
         self._grid = grid
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     """
     Run a game of life
     """
-    ap = argparse.ArgumentParser('Cellular Automata Playground')
+    ap = argparse.ArgumentParser("Cellular Automata Playground")
     ap.add_argument(
-        '-i', '--iterations', dest='iterations', type=int, action='store',
+        "-i",
+        "--iterations",
+        dest="iterations",
+        type=int,
+        action="store",
         default=99,
     )
     ap.add_argument(
-        '-r', '--rules', dest='rules', action='store', default='gol',
-        help='ruleset algorithms\n'
-        + 'gol :: conways game of life\n'
+        "-r",
+        "--rules",
+        dest="rules",
+        action="store",
+        default="gol",
+        help="ruleset algorithms\n" + "gol :: conways game of life\n",
     )
     ap.add_argument(
-        '-o', '--outdir', dest='outdir', action='store', default='/tmp',
-        help='output dir'
+        "-o",
+        "--outdir",
+        dest="outdir",
+        action="store",
+        default="/tmp",
+        help="output dir",
     )
     ap.add_argument(
-        '-W', '--width', dest='width', type=int, action='store',
+        "-W",
+        "--width",
+        dest="width",
+        type=int,
+        action="store",
         default=200,
-        help='width'
+        help="width",
     )
     ap.add_argument(
-        '-H', '--height', dest='height', type=int, action='store',
+        "-H",
+        "--height",
+        dest="height",
+        type=int,
+        action="store",
         default=80,
-        help='height'
+        help="height",
     )
     ap.add_argument(
-        '-I', '--image', dest='image', action='store',
-        help='init grid from image.'
+        "-I", "--image", dest="image", action="store", help="init grid from image."
     )
     args = ap.parse_args()
 
@@ -131,20 +147,17 @@ if __name__ == '__main__':
     if args.image:
         image = cv2.imread(args.image, cv2.IMREAD_GRAYSCALE)
         _, image = cv2.threshold(image, 127, 255, cv2.THRESH_BINARY)
-        cv2.imshow('image window', image)
+        cv2.imshow("image window", image)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
         gol.from_bitmap(image)
     else:
         gol.randomize()
 
-    print(f'writing {args.iterations} frames to {args.outdir}')
+    print(f"writing {args.iterations} frames to {args.outdir}")
     for i in range(args.iterations):
-        cv2.imwrite(
-            os.path.join(args.outdir, '{:05d}.png'.format(i)),
-            gol.array * 255
-        )
+        cv2.imwrite(os.path.join(args.outdir, "{:05d}.png".format(i)), gol.array * 255)
         gol.step(rules=args.rules)
         progress(i, args.iterations)
 
-    stdout.write('\n')
+    stdout.write("\n")

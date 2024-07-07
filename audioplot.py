@@ -17,7 +17,7 @@ else:
     try:
         mode = sys.argv[2]
     except IndexError:
-        mode = 'freq'
+        mode = "freq"
 
 meta, data = loadwav(soundfile)
 
@@ -30,25 +30,25 @@ fig = plt.figure()
 gs = gridspec.GridSpec(meta.channels, 1)
 
 # time/signal view
-if mode[:4] == 'freq':
+if mode[:4] == "freq":
     for i, channel in enumerate(data.T):
         ax = plt.Subplot(fig, gs[i])
         ax.plot(t, channel)
         fig.add_subplot(ax)
 
 # frequency/energy view
-elif mode[:4] == 'spec':
+elif mode[:4] == "spec":
     blocksize = 64
     N = meta.samples
     T = 1.0 / meta.samples * 1.25
-    x = np.linspace(0.0, 1.0/(2.0*T), N/2)
+    x = np.linspace(0.0, 1.0 / (2.0 * T), N / 2)
     for n, block in enumerate(audio_chunks(data, blocksize)):
         if meta.channels == 2:
             block = block.T[0]
-#        y = scipy.fftpack.fft(channel)
+        #        y = scipy.fftpack.fft(channel)
         y = spectrum(channel, meta.rate)
         ax = plt.Subplot(fig, gs[i])
-#        ax.plot(x, 2.0/N * np.abs(y[:N/2]))
+        #        ax.plot(x, 2.0/N * np.abs(y[:N/2]))
         cbar = plt.colorbar(ScalarMappable(), ticks=lvls)
         fig.add_subplot(ax)
 
