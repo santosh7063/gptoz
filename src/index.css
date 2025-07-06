@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-gray-900 text-white font-sans;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  .glass-effect {
+    @apply bg-white/10 backdrop-blur-md border border-white/20;
+  }
+  
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary-400 to-accent-400 bg-clip-text text-transparent;
+  }
+  
+  .visualizer-bar {
+    @apply bg-gradient-to-t from-primary-600 via-primary-400 to-accent-400;
+    transition: height 0.1s ease-out;
+  }
+  
+  .waveform-line {
+    stroke: url(#waveform-gradient);
+    stroke-width: 2;
+    fill: none;
+    filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.5));
+  }
+}
+
+.audio-controls {
+  @apply flex items-center gap-4 p-4 glass-effect rounded-xl;
+}
+
+.visualizer-container {
+  @apply relative overflow-hidden rounded-xl glass-effect;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.6) 100%);
+}
