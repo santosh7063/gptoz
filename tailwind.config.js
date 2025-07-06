@@ -7,6 +7,7 @@ export default {
   theme: {
     extend: {
       colors: {
+        border: 'rgba(255, 255, 255, 0.2)',
         primary: {
           50: '#f0f9ff',
           100: '#e0f2fe',
